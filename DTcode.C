@@ -349,25 +349,25 @@ void DelaunayTriangulation::EdgeFlip(int j, float* p4, int edge)
             t = triangles[j].triangle_across_e1->triangle_across_e3;
         }
 	
-	new_edge = ((edge + 1) % 3) + 1;
-	if (new_edge == 1)
-	{
-		ot = triangles[j].triangle_across_e1->triangle_across_e1;
-	}
-	else if (new_edge == 2)
-	{
-		ot = triangles[j].triangle_across_e1->triangle_across_e2;
-	}
-	else if (new_edge == 3)
-	{
-		ot = triangles[j].triangle_across_e1->triangle_across_e3;
-	}
+	    new_edge = ((edge + 1) % 3) + 1;
+	    if (new_edge == 1)
+	    {
+		    ot = triangles[j].triangle_across_e1->triangle_across_e1;
+	    }
+	    else if (new_edge == 2)
+	    {
+		    ot = triangles[j].triangle_across_e1->triangle_across_e2;
+	    }
+	    else if (new_edge == 3)
+	    {
+		    ot = triangles[j].triangle_across_e1->triangle_across_e3;
+	    }
 
        }
        else
        {
         t = NULL;
-	ot = NULL;
+    	ot = NULL;
        }
 
        triangles[j].triangle_across_e1->p1[0] = p4[0];
@@ -388,6 +388,35 @@ void DelaunayTriangulation::EdgeFlip(int j, float* p4, int edge)
        //triangles[j].p1 and triangles[j].p3 are the same
        triangles[j].p2[0] = p4[0];
        triangles[j].p2[1] = p4[1];
+
+       edge = WhatEdge(triangles[j].p1, triangles[j].p2, triangles[j].triangle_across_e1);
+       if (edge == 1)
+       {
+        triangles[j].triangle_across_e1 -> triangle_across_e1 = &(triangles[j]);
+       }
+       else if (edge == 2)
+       {
+        triangles[j].triangle_across_e1 -> triangle_across_e2 = &(triangles[j]);
+       }
+       else if (edge == 3)
+       {
+        triangles[j].triangle_across_e1 -> triangle_across_e3 = &(triangles[j]);
+       }
+       
+       edge = WhatEdge(triangles[j].triangle_across_e2 -> p2, triangles[j].triangle_across_e2 -> p3, triangles[j].triangle_across_e2 -> triangle_across_e2); 
+       if (edge == 1)
+       {
+        triangles[j].triangle_across_e2 -> triangle_across_e2 -> triangle_across_e1 = triangles[j].triangle_across_e2;
+       }
+       if (edge == 2)
+       {
+        triangles[j].triangle_across_e2 -> triangle_across_e2 -> triangle_across_e2 = triangles[j].triangle_across_e2;
+       }
+       if (edge == 3)
+       {
+        triangles[j].triangle_across_e2 -> triangle_across_e2 -> triangle_across_e3 = triangles[j].triangle_across_e2;
+       }
+
     } else if (edge == 2) {
        OneTriangle *t;
        OneTriangle *ot;
@@ -448,6 +477,35 @@ void DelaunayTriangulation::EdgeFlip(int j, float* p4, int edge)
        //triangles[j].p1 and triangles[j].p3 are the same
        triangles[j].p2[0] = p4[0];
        triangles[j].p2[1] = p4[1];
+       
+       edge = WhatEdge(triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e2);
+       if (edge == 1)
+       {
+        triangles[j].triangle_across_e2 -> triangle_across_e1 = &(triangles[j]);
+       }
+       else if (edge == 2)
+       {
+        triangles[j].triangle_across_e2 -> triangle_across_e2 = &(triangles[j]);
+       }
+       else if (edge == 3)
+       {
+        triangles[j].triangle_across_e2 -> triangle_across_e3 = &(triangles[j]);
+       }
+       
+       edge = WhatEdge(triangles[j].triangle_across_e1 -> p1, triangles[j].triangle_across_e1 -> p2, triangles[j].triangle_across_e1 -> triangle_across_e1); 
+       if (edge == 1)
+       {
+        triangles[j].triangle_across_e1 -> triangle_across_e1 -> triangle_across_e1 = triangles[j].triangle_across_e1;
+       }
+       if (edge == 2)
+       {
+        triangles[j].triangle_across_e1 -> triangle_across_e1 -> triangle_across_e2 = triangles[j].triangle_across_e1;
+       }
+       if (edge == 3)
+       {
+        triangles[j].triangle_across_e1 -> triangle_across_e1 -> triangle_across_e3= triangles[j].triangle_across_e1;
+       }
+
     } else if (edge == 3) {
        int edge = WhatEdge(triangles[j].p3, triangles[j].p1, triangles[j].triangle_across_e3);
        int new_edge;
@@ -510,6 +568,34 @@ void DelaunayTriangulation::EdgeFlip(int j, float* p4, int edge)
        triangles[j].p2[1] = triangles[j].p3[1];
        triangles[j].p3[0] = p4[0];
        triangles[j].p3[1] = p4[1];
+       
+       edge = WhatEdge(triangles[j].triangle_across_e3 -> p1, triangles[j].triangle_across_e3 -> p2, triangles[j].triangle_across_e3 -> triangle_across_e1);
+       if (edge == 1)
+       {
+        triangles[j].triangle_across_e3 -> triangle_across_e1 -> triangle_across_e1 = triangles[j].triangle_across_e3;
+       }
+       else if (edge == 2)
+       {
+        triangles[j].triangle_across_e3 -> triangle_across_e1 -> triangle_across_e2 = triangles[j].triangle_across_e3;
+       }
+       else if (edge == 3)
+       {
+        triangles[j].triangle_across_e3 -> triangle_across_e1 -> triangle_across_e3 = triangles[j].triangle_across_e3;
+       }
+       
+       edge = WhatEdge(triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e2); 
+       if (edge == 1)
+       {
+        triangles[j].triangle_across_e2 -> triangle_across_e1 = &(triangles[j]);
+       }
+       if (edge == 2)
+       {
+        triangles[j].triangle_across_e2 -> triangle_across_e2 = &(triangles[j]);
+       }
+       if (edge == 3)
+       {
+        triangles[j].triangle_across_e2 -> triangle_across_e3 = &(triangles[j]);
+       }
 
     } else printf("\n\n\n***edge error!***\n\n\n");/* */
 }
@@ -565,6 +651,7 @@ DelaunayTriangulation::Initialize(float x1, float y1, float x2, float y2, float 
     ot.p2[1] = y2;
     ot.p3[0] = x3;
     ot.p3[1] = y3;
+    triangles.reserve(2000);
     triangles.push_back(ot);
 }
 
@@ -837,8 +924,9 @@ int main()
     for (int i = 0 ; i < 100 ; i++)
         DT.AddPoint(pts[2*i], pts[2*i+1]);
  
-    DT.DelBoundingTri();
+    //DT.DelBoundingTri();
     DT.Verify(); 
+    DT.DelBoundingTri();
 
     char *filename = (char *)"kristi.vtk";
     DT.WriteOutTriangle(filename);
