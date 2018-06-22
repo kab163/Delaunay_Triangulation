@@ -10,7 +10,6 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-k
 // OUR CONVENTION
 // 
 //      p1
@@ -25,7 +24,6 @@ k
 // Between p1 and p3 is e3
 // (and the picture could be flipped, rotated, etc.)
 //
-2
 //DO NOT EDIT THIS FUNCTION
 float * 
 PointsGenerator(int numPoints, int dim = 2)
