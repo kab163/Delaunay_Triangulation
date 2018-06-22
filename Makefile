@@ -1,4 +1,4 @@
-SRC = DTcode2.C logging.C
+SRC = DTcode.C logging.C
 OBJ=$(SRC:.C=.o)
 
 all: $(OBJ)
@@ -10,5 +10,7 @@ all: $(OBJ)
 run:
 	./delt
 
+j:
+	g++ -w -g -I. jb.C -o delt
 clean:
-	rm *.o delt
+	rm *.o delt 
