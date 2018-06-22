@@ -137,25 +137,52 @@ void DelaunayTriangulation::Verify()
 
     while (!done) {
       numTrianglesFlipped = 0;
-      for(int j = 1; j < ncells; j++) {   
+      for(int j = 0; j < ncells; j++) {   
         if (triangles[j].triangle_across_e1 != NULL) {
-            if(CircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e1->p2)) {
+            if(CircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e1->p1)) {
 	        numTrianglesFlipped++; 
-	        EdgeFlip(j,triangles[j].triangle_across_e1->p2, 1);
+	        EdgeFlip(j,triangles[j].triangle_across_e1->p1, 1);
 	    }
+            if(CircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e1->p2)) {
+                numTrianglesFlipped++;
+                EdgeFlip(j,triangles[j].triangle_across_e1->p2, 1);
+            }
+            if(CircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e1->p3)) {
+                numTrianglesFlipped++;
+                EdgeFlip(j,triangles[j].triangle_across_e1->p3, 1);
+            }
         }
+	else printf("null edge");
         if (triangles[j].triangle_across_e2 != NULL) {
-            if(CircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e2->p2)) { 
+            if(CircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e2->p1)) { 
 	        numTrianglesFlipped++;
-		EdgeFlip(j,triangles[j].triangle_across_e2->p2, 2);
+		EdgeFlip(j,triangles[j].triangle_across_e2->p1, 2);
+            }
+            if(CircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e2->p2)) {
+                numTrianglesFlipped++;
+                EdgeFlip(j,triangles[j].triangle_across_e2->p2, 2);
+            }
+            if(CircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e2->p3)) {
+                numTrianglesFlipped++;
+                EdgeFlip(j,triangles[j].triangle_across_e2->p3, 2);
             }
         } 
+        else printf("null edge");
         if (triangles[j].triangle_across_e3 != NULL) {
-            if(CircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e3->p3)) { 
+            if(CircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e3->p1)) { 
 	        numTrianglesFlipped++;
-	        EdgeFlip(j, triangles[j].triangle_across_e3->p3, 3);
+	        EdgeFlip(j, triangles[j].triangle_across_e3->p1, 3);
 	    }
+            if(CircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e3->p2)) {
+                numTrianglesFlipped++;
+                EdgeFlip(j, triangles[j].triangle_across_e3->p2, 3);
+            }
+            if(CircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e3->p3)) {
+                numTrianglesFlipped++;
+                EdgeFlip(j, triangles[j].triangle_across_e3->p3, 3);
+            }
         }
+        else printf("null edge");
       }
       totalFlips += numTrianglesFlipped;
       done = (numTrianglesFlipped == 0 ? true : false);
@@ -443,7 +470,7 @@ int main()
     DelaunayTriangulation DT;
 
     DT.Initialize(-1, -1, 2, -1, .5, 2);
-    for (int i = 0 ; i < 10 ; i++)
+    for (int i = 0 ; i < 4 ; i++)
         DT.AddPoint(pts[2*i], pts[2*i+1]);
  
     DT.Verify(); 
