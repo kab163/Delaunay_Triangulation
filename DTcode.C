@@ -199,12 +199,8 @@ void DelaunayTriangulation::Verify()
             //if(CircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e2->p2)) { 
             if(CircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, fourthPoint)) { 
 	        numTrianglesFlipped++;
-<<<<<<< HEAD
 		//EdgeFlip(j,triangles[j].triangle_across_e2->p2, 2);
 		EdgeFlip(j, fourthPoint, triangles[j].triangle_across_e2, 2);
-=======
-		EdgeFlip(j,triangles[j].triangle_across_e2->p2, 2);
->>>>>>> 410d2f2a06adfbe197d4e0ba07c4902548903c14
             }
         } 
         if (triangles[j].triangle_across_e3 != NULL) {
@@ -637,11 +633,7 @@ int main()
     DelaunayTriangulation DT;
 
     DT.Initialize(-1, -1, 2, -1, .5, 2);
-<<<<<<< HEAD
     for (int i = 0 ; i < points ; i++)
-=======
-    for (int i = 0 ; i < 10 ; i++)
->>>>>>> 410d2f2a06adfbe197d4e0ba07c4902548903c14
         DT.AddPoint(pts[2*i], pts[2*i+1]);
  
     DT.Verify(); 

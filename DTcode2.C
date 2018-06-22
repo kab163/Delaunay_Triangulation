@@ -565,6 +565,7 @@ DelaunayTriangulation::Initialize(float x1, float y1, float x2, float y2, float 
     ot.p2[1] = y2;
     ot.p3[0] = x3;
     ot.p3[1] = y3;
+    triangles.reserve(2000);
     triangles.push_back(ot);
 }
 
@@ -790,15 +791,15 @@ DelaunayTriangulation::WhatEdge(float *pt1, float *pt2, OneTriangle *tri)
         return 0;
     }
 
-    if ((pt1[0] == tri->p1[0] && pt1[1] == tri->p1[1]) || (pt2[0] == tri->p1[0] && pt2[1] == tri->p1[1]))
+    if ((pt1[0] == tri->p1[0] && pt1[1] == tri->p1[1]) || (pt2[0] == tri->p1[0] && pt2[1] == tri->p1[1]))	// point 1 used
     {
         total += 1;
     }
-    if ((pt1[0] == tri->p2[0] && pt1[1] == tri->p2[1]) || (pt2[0] == tri->p2[0] && pt2[1] == tri->p2[1]))
+    if ((pt1[0] == tri->p2[0] && pt1[1] == tri->p2[1]) || (pt2[0] == tri->p2[0] && pt2[1] == tri->p2[1]))	// point 2 used
     {
         total += 2;
     }
-    if ((pt1[0] == tri->p3[0] && pt1[1] == tri->p3[1]) || (pt2[0] == tri->p3[0] && pt2[1] == tri->p3[1]))
+    if ((pt1[0] == tri->p3[0] && pt1[1] == tri->p3[1]) || (pt2[0] == tri->p3[0] && pt2[1] == tri->p3[1]))	// point 3 used
     {
         total += 3;
     }
@@ -830,14 +831,15 @@ DelaunayTriangulation::DetHelp(float pt1, float pt2, float pt3, float pt4)
 
 int main()
 {
-    float *pts = PointsGenerator(100, 2);
+    int points = 100;
+    float *pts = PointsGenerator(points, 2);
     DelaunayTriangulation DT;
 
     DT.Initialize(-1, -1, 2, -1, .5, 2);
-    for (int i = 0 ; i < 100 ; i++)
+    for (int i = 0 ; i < points ; i++)
         DT.AddPoint(pts[2*i], pts[2*i+1]);
  
-    DT.DelBoundingTri();
+    //DT.DelBoundingTri();
     DT.Verify(); 
 
     char *filename = (char *)"kristi.vtk";
