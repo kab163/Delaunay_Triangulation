@@ -35,7 +35,6 @@ PointsGenerator(int numPoints, int dim = 2)
         {
             float rand_value = rand() % 100000 / 100000.0;
             array[dim*i+j] = rand_value;
-            cerr << "rand value: " << rand_value << endl;
 	}
     }
 
@@ -355,7 +354,6 @@ void DelaunayTriangulation::WriteOutTriangle(char *filename)
 {
     int ncells = triangles.size();
     cerr << "NUMBER OF TRIANGLES is " << ncells << endl;
-
     int *celltypes = new int[ncells];
     for (int i = 0 ; i < ncells ; i++)
         celltypes[i] = VISIT_TRIANGLE;
@@ -413,13 +411,11 @@ DelaunayTriangulation::Initialize(float x1, float y1, float x2, float y2, float 
     ot.p3[1] = y3;
     triangles.reserve(2000);
     triangles.push_back(ot);
-    cerr << "vector size: " << triangles.size() << endl;
 }
 
 void
 DelaunayTriangulation::AddPoint(float x1, float y1)
 {
-    cerr << "vector size in addpoint: " << triangles.size() << endl;
     for (int i = 0 ; i < triangles.size() ; i++)
     {
         if (triangles[i].ContainsPoint(x1, y1))
@@ -455,16 +451,18 @@ DelaunayTriangulation::AddPoint(float x1, float y1)
 //  T3 will have points: p4, p2, p3 and triangles across e1 is T1, triangle across e2 is TC, and triangle across e3 is T2
 //
             OneTriangle original_triangle = triangles[i];
+            //// ADDED
             /*
             if (triangles[i].triangle_across_e1 != original_triangle.triangle_across_e1)
                 cerr << "ERROR! pointers not equal!" << endl; 
-            */
 	    cerr << "original p1: " << triangles[i].p1[0] << ", " << triangles[i].p1[1] << endl
                  << "p2: " << triangles[i].p2[0] << ", " << triangles[i].p2[1] << endl
                  << "p3: " << triangles[i].p3[0] << ", " << triangles[i].p3[1] << endl;
 	    cerr << "copy of original p1: " << original_triangle.p1[0] << ", " << original_triangle.p1[1] << endl
                  << "p2: " << original_triangle.p2[0] << ", " << original_triangle.p2[1] << endl
                  << "p3: " << original_triangle.p3[0] << ", " << original_triangle.p3[1] << endl;
+            //// END ADDED
+            */
             OneTriangle *TA = original_triangle.triangle_across_e1;
 	    OneTriangle *TC = original_triangle.triangle_across_e2; //KB
 	    OneTriangle *TB = original_triangle.triangle_across_e3; //KB
@@ -550,6 +548,9 @@ DelaunayTriangulation::AddPoint(float x1, float y1)
               else if (TC->triangle_across_e3 == T1)
                   TC->triangle_across_e3 = T3;
             }
+
+            //// ADDED:
+            /*
             cerr << "--T1 p1: " << T1->p1[0] << ", " << T1->p1[1] << endl
                  << "p2: " << T1->p2[0] << ", " << T1->p2[1] << endl
                  << "p3: " << T1->p3[0] << ", " << T1->p3[1] << endl;
@@ -560,12 +561,8 @@ DelaunayTriangulation::AddPoint(float x1, float y1)
                  << "p2: " << T3->p2[0] << ", " << T3->p2[1] << endl
                  << "p3: " << T3->p3[0] << ", " << T3->p3[1] << endl
                  << "-----------------------------------" << endl;
-	    /*
-            cerr << "original address val of p1: " << triangles[i].p1[0] << ", " << triangles[i].p1[1] << endl
-                 << "p2: " << triangles[i].p2[0] << ", " << triangles[i].p2[1] << endl
-                 << "p3: " << triangles[i].p3[0] << ", " << triangles[i].p3[1] << endl
-                 << "-----------------------------------" << endl;
             */
+            //// END ADDED
             break;
         }
     }
