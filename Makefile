@@ -11,6 +11,6 @@ run:
 	./delt
 
 j:
-	g++ -w -g -I. jb.C -o delt
+	g++ -w -g -I. jcode.C logging.C -o delt
 clean:
 	rm *.o delt 

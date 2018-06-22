@@ -127,10 +127,12 @@ class DelaunayTriangulation
 };
 
 /*
+    Function to determine fourth point to used in edge flip
     p1 to p1 - p2 to p2 -> p3
     p1 to p2 - p2 to p1 -> p3
     p1 to p3 - p2 to p1 -> p2
     p2 to p3 - p3 to p2 -> p1
+    NOTE: NEED TO MODIFY TO RETURN WHAT POINT NUMBER IT IS AS WELL - WILL BE USED IN EDGEFLIP
 */
 float *
 DelaunayTriangulation::determineFourthPoint(OneTriangle base, OneTriangle * overEdge) {
@@ -157,9 +159,8 @@ DelaunayTriangulation::determineFourthPoint(OneTriangle base, OneTriangle * over
 void DelaunayTriangulation::Verify()
 {
     int ncells = triangles.size();
-    // logging
+    //// ADDED
     char msg[1024];
-    //cerr << "ncells: " << ncells << endl;
     //
     int iteration = 0;
     int totalFlips = 0;
@@ -177,42 +178,43 @@ void DelaunayTriangulation::Verify()
             Logger::LogEvent(msg);
             // finding 4th point
             fourthPoint = determineFourthPoint(triangles[j], triangles[j].triangle_across_e1);
-            //// END ADDED
             //if(CircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e1->p2)) {
             if(CircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, fourthPoint)) {
 	        numTrianglesFlipped++; 
 	        //EdgeFlip(j,triangles[j].triangle_across_e1->p2, 1);
 	        EdgeFlip(j, fourthPoint, triangles[j].triangle_across_e1, 1);
+                //// END ADDED
 	    }
         }
         if (triangles[j].triangle_across_e2 != NULL) {
+            //// ADDED
             // logging
             sprintf(msg, "verify:\ttriangle %d - TAe2 not null", j);
             Logger::LogEvent(msg);
-            //
             // finding 4th point
             fourthPoint = determineFourthPoint(triangles[j], triangles[j].triangle_across_e2);
-            //// END ADDED
             //if(CircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e2->p2)) { 
             if(CircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, fourthPoint)) { 
 	        numTrianglesFlipped++;
 		//EdgeFlip(j,triangles[j].triangle_across_e2->p2, 2);
 		EdgeFlip(j, fourthPoint, triangles[j].triangle_across_e2, 2);
+                //// END ADDED
             }
         } 
         if (triangles[j].triangle_across_e3 != NULL) {
+            //// ADDED
             // logging
             sprintf(msg, "verify:\ttriangle %d - TAe3 not null", j);
             Logger::LogEvent(msg);
             //
             // finding 4th point
             fourthPoint = determineFourthPoint(triangles[j], triangles[j].triangle_across_e3);
-            //// END ADDED
             //if(CircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e3->p3)) { 
             if(CircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, fourthPoint)) { 
 	        numTrianglesFlipped++;
 	        //EdgeFlip(j, triangles[j].triangle_across_e3->p3, 3);
 	        EdgeFlip(j, fourthPoint, triangles[j].triangle_across_e3, 3);
+                //// END ADDED
 	    }
         }
       }
@@ -233,14 +235,17 @@ void DelaunayTriangulation::DelBoundingTri()
       that is this bounding triangle. The DT should now be complete.
     */
 }
-/*
+
+//// ADDED 
+// function for point comparisons
 bool DelaunayTriangulation::PointCompare(float ax, float ay, float bx, float by) {
     if ((ax = bx) && (ay == by))
         return true;
     else
         return false;
 }
-*/
+//// END ADDED
+
 void DelaunayTriangulation::EdgeFlip(int j, float* p4, OneTriangle * edgeTriangle, int edge)
 {
     /*
@@ -312,11 +317,7 @@ void DelaunayTriangulation::EdgeFlip(int j, float* p4, OneTriangle * edgeTriangl
        triangles[j].p2[0] = p4[0];
        triangles[j].p2[1] = p4[1];
        //// ADDED:
-       if (((triangles[j].p2[0] != edgeTriangle->p1[0]) || (triangles[j].p2[1] != edgeTriangle->p1[1])) ||
-           ((triangles[j].p3[0] != edgeTriangle->p3[0]) || (triangles[j].p3[1] != edgeTriangle->p3[1]))) {
-               Logger::LogEvent("EDGE 2 TRIANGLES NOT EQUAL");
-       }
-       OneTriangle * original_e1 = triangles[j].triangle_across_e1;
+       neTriangle * original_e1 = triangles[j].triangle_across_e1;
        triangles[j].triangle_across_e1 = triangles[j].triangle_across_e2;
        triangles[j].triangle_across_e2 = edgeTriangle->triangle_across_e2;
        edgeTriangle->triangle_across_e2 = edgeTriangle->triangle_across_e1;
