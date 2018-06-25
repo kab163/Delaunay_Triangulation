@@ -927,10 +927,6 @@ int main()
     //DT.DelBoundingTri();
     DT.Verify(); 
     DT.DelBoundingTri();
-    //for(int i = 0; i < DT.triangles.size(), i++)
-    //{
-        //printf("%f\t%f\t%p\t%p\t%p", DT.triangles[i].p1[0], DT.triangles[i].p1[1], DT.triangles[i].triangle_across_e1, DT.triangles[i].triangle_across_e2, DT.triangles[i].triangle_across_e3);
-    //}
 
     char *filename = (char *)"kristi.vtk";
     DT.WriteOutTriangle(filename);
