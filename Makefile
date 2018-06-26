@@ -1,4 +1,4 @@
-SRC = DTcode.C logging.C
+SRC = jcode.C logging.C
 OBJ=$(SRC:.C=.o)
 
 all: $(OBJ)
