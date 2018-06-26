@@ -11,7 +11,7 @@ using std::cerr;
 using std::endl;
 
 
-#define NUM_POINTS 100
+#define NUM_POINTS 100000
 
 // OUR CONVENTION
 // 
@@ -156,27 +156,27 @@ void DelaunayTriangulation::Verify()
         for (int j = 0; j < ncells; j++) {   
             if (triangles[j].triangle_across_e1 != NULL) {
                 if (CircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e1->p2)) {
-	                numTrianglesFlipped++; 
-	                EdgeFlip(j,triangles[j].triangle_across_e1->p2, 1);
-	            }
+                    numTrianglesFlipped++; 
+                    EdgeFlip(j,triangles[j].triangle_across_e1->p2, 1);
+                }
                 else if (CircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e1->p1)) {
-	                numTrianglesFlipped++; 
-	                EdgeFlip(j,triangles[j].triangle_across_e1->p1, 1);
+                    numTrianglesFlipped++; 
+                    EdgeFlip(j,triangles[j].triangle_across_e1->p1, 1);
                 }
                 else if (CircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e1->p3)) {
-	                numTrianglesFlipped++; 
-	                EdgeFlip(j,triangles[j].triangle_across_e1->p3, 1);
+                    numTrianglesFlipped++; 
+                    EdgeFlip(j,triangles[j].triangle_across_e1->p3, 1);
                 }
             }
 
             if (triangles[j].triangle_across_e2 != NULL) {
                 if (CircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e2->p1)) { 
-	                numTrianglesFlipped++;
-		            EdgeFlip(j,triangles[j].triangle_across_e2->p1, 2);
+                    numTrianglesFlipped++;
+                    EdgeFlip(j,triangles[j].triangle_across_e2->p1, 2);
                 }
                 else if (CircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e2->p2)) { 
-	                numTrianglesFlipped++;
-		            EdgeFlip(j,triangles[j].triangle_across_e2->p2, 2);
+                    numTrianglesFlipped++;
+                    EdgeFlip(j,triangles[j].triangle_across_e2->p2, 2);
                 }
                 else if (CircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e2->p3)) { 
 	                numTrianglesFlipped++;
@@ -232,32 +232,41 @@ void DelaunayTriangulation::DelBoundingTri()
 	    {
             if (triangles[j].triangle_across_e1 != NULL) {
                 edge = WhatEdge(triangles[j].p1, triangles[j].p2, triangles[j].triangle_across_e1);
-                if (edge == 1)
+                if (edge == 1) {
                     triangles[j].triangle_across_e1->triangle_across_e1 = NULL;
-                else if (edge == 2)
+                }
+                else if (edge == 2) {
                     triangles[j].triangle_across_e1->triangle_across_e2 = NULL;
-                else if (edge == 3)
+                }
+                else if (edge == 3) {
                     triangles[j].triangle_across_e1->triangle_across_e3 = NULL;
+                }
             }
             
             if (triangles[j].triangle_across_e2 != NULL){
                 edge = WhatEdge(triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e2);
-                if (edge == 1)
+                if (edge == 1) {
                     triangles[j].triangle_across_e2->triangle_across_e1 = NULL;
-                else if (edge == 2)
+                }
+                else if (edge == 2) {
                     triangles[j].triangle_across_e2->triangle_across_e2 = NULL;
-                else if (edge == 3)
+                }
+                else if (edge == 3) {
                     triangles[j].triangle_across_e2->triangle_across_e3 = NULL;
+                }
             }
             
             if (triangles[j].triangle_across_e3 != NULL) {
                 edge = WhatEdge(triangles[j].p3, triangles[j].p1, triangles[j].triangle_across_e3);
-                if (edge == 1)
+                if (edge == 1) {
                     triangles[j].triangle_across_e3->triangle_across_e1 = NULL;
-                else if (edge == 2)
+                }
+                else if (edge == 2) {
                     triangles[j].triangle_across_e3->triangle_across_e2 = NULL;
-                else if (edge == 3)
+                }
+                else if (edge == 3) {
                     triangles[j].triangle_across_e3->triangle_across_e3 = NULL;
+                }
             }
             
             triangles.erase(triangles.begin() + j);
