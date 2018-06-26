@@ -747,7 +747,6 @@ DelaunayTriangulation::CircumcircleCheck(float* ptA, float* ptB, float* ptC, flo
     if (result < 0) return false; //ptD lies outside circumcircle
     else if (result > 0) return true; //ptD lies inside circumcircle
     else if (result == 0) return false; // ptD lies ON the circle, for now acting like it lies outside...
-    //what about if it equals zero? Lies *on* the circle...
 }
 
 bool
@@ -835,6 +834,8 @@ int main()
     //Make Tessellation meet Delaunay condition
     DT.Verify(); 
     DT.DelBoundingTri();
+
+    //function to double check correctness of DT should go here
 
     char *filename = (char *)"kristi.vtk";
     DT.WriteOutTriangle(filename);
