@@ -632,8 +632,8 @@ DelaunayTriangulation::AddPoint(float x1, float y1)
 //
             OneTriangle original_triangle = triangles[i];
             OneTriangle *TA = original_triangle.triangle_across_e1;
-            OneTriangle *TC = original_triangle.triangle_across_e2; //KB
-            OneTriangle *TB = original_triangle.triangle_across_e3; //KB
+            OneTriangle *TC = original_triangle.triangle_across_e2; 
+            OneTriangle *TB = original_triangle.triangle_across_e3;
 
             // split triangle i into three triangles
             // note: no edge flipping or Delaunay business.
@@ -644,34 +644,34 @@ DelaunayTriangulation::AddPoint(float x1, float y1)
 
             // now add two more triangles.
             OneTriangle new_triangle1;
-            new_triangle1.p1[0] = x1; //KB
-            new_triangle1.p1[1] = y1; //KB
-            new_triangle1.p2[0] = original_triangle.p2[0]; //KB
-            new_triangle1.p2[1] = original_triangle.p2[1]; //KB
-            new_triangle1.p3[0] = original_triangle.p3[0]; //KB
-            new_triangle1.p3[1] = original_triangle.p3[1]; //KB
+            new_triangle1.p1[0] = x1; 
+            new_triangle1.p1[1] = y1; 
+            new_triangle1.p2[0] = original_triangle.p2[0]; 
+            new_triangle1.p2[1] = original_triangle.p2[1];
+            new_triangle1.p3[0] = original_triangle.p3[0]; 
+            new_triangle1.p3[1] = original_triangle.p3[1];
             triangles.emplace_back(new_triangle1);
             int index = triangles.size()-1;
             OneTriangle *T3 = &(triangles[index]);
 
             OneTriangle new_triangle2;
-            new_triangle2.p1[0] = original_triangle.p1[0]; //KB
-            new_triangle2.p1[1] = original_triangle.p1[1]; //KB
-            new_triangle2.p2[0] = x1; //KB
-            new_triangle2.p2[1] = y1; //KB
-            new_triangle2.p3[0] = original_triangle.p3[0]; //KB
-            new_triangle2.p3[1] = original_triangle.p3[1]; //KB
+            new_triangle2.p1[0] = original_triangle.p1[0];
+            new_triangle2.p1[1] = original_triangle.p1[1];
+            new_triangle2.p2[0] = x1;
+            new_triangle2.p2[1] = y1;
+            new_triangle2.p3[0] = original_triangle.p3[0]; 
+            new_triangle2.p3[1] = original_triangle.p3[1]; 
             triangles.emplace_back(new_triangle2);
             OneTriangle *T2 = &(triangles[index+1]);
         
-            T1->triangle_across_e1 = TA; //TA
-            T1->triangle_across_e2 = T3; //T3
+            T1->triangle_across_e1 = TA; 
+            T1->triangle_across_e2 = T3;
             T1->triangle_across_e3 = T2;
             T2->triangle_across_e1 = T1;
-            T2->triangle_across_e2 = T3; //T3
-            T2->triangle_across_e3 = TB; //TB
-            T3->triangle_across_e1 = T1; //T1
-            T3->triangle_across_e2 = TC; //TC
+            T2->triangle_across_e2 = T3;
+            T2->triangle_across_e3 = TB;
+            T3->triangle_across_e1 = T1;
+            T3->triangle_across_e2 = TC; 
             T3->triangle_across_e3 = T2;
             if (TA != NULL) {
                 int edge = WhatEdge(original_triangle.p1, original_triangle.p2, TA);
