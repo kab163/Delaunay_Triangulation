@@ -1,11 +1,11 @@
-SRC = jcode.C logging.C
+SRC = DTcode.C logging.C
 OBJ=$(SRC:.C=.o)
 
 all: $(OBJ)
-	g++ -w -g -I. $(OBJ) -o delt
+	g++ -w -g -I. -std=c++11 $(OBJ) -o delt
 
 .C.o: $<
-	g++ -w -g -I. -c $<
+	g++ -w -g -std=c++11 -I. -c $<
 
 run:
 	./delt
