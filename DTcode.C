@@ -11,7 +11,7 @@ using std::cerr;
 using std::endl;
 
 
-#define NUM_POINTS 10000
+#define NUM_POINTS 20000
 
 // OUR CONVENTION
 // 
@@ -82,6 +82,7 @@ bool IsOnSameSide(float *endPoint1, float *endPoint2,
 class OneTriangle
 {
   public:
+    
     float     p1[2]; 
     float     p2[2]; 
     float     p3[2]; 
@@ -133,7 +134,7 @@ class DelaunayTriangulation
     void   Verify();
     void   VerifyMeetDC();                                           // verify meet delaunay condition
     bool   SumAngles(float *, float *);                              // method used to verify
-    float * FindVectors(OneTriangle, OneTriangle *);                 // helps verify DC
+    float * FindVectors(int, OneTriangle *);                         // helps verify DC
     void   DelBoundingTri();
     void   WriteOutTriangle(char *filename);
     bool   AltCircumcircleCheck(float*, float*, float*, float*);
@@ -299,6 +300,20 @@ void DelaunayTriangulation::DelBoundingTri()
 
     for (j = ncells - 1; j >= 0; j--) { 
         if (triangles[j].p1[0] == -100000000.0f) {
+            // this code is used to move the pointers of all triangles back by 1
+            //   to account for an element being erased if the triangles are in further
+            //   memory positions than the triangle to be erased (erase reallocates)
+            for (int v = 0; v < triangles.size(); v++) {
+                 if (triangles[v].triangle_across_e1 > &(triangles[j])) {
+                     triangles[v].triangle_across_e1 = triangles[v].triangle_across_e1 - 1;
+                 }
+                 if (triangles[v].triangle_across_e2 > &(triangles[j])) {
+                     triangles[v].triangle_across_e2 = triangles[v].triangle_across_e2 - 1;
+                 }
+                 if (triangles[v].triangle_across_e3 > &(triangles[j])) {
+                     triangles[v].triangle_across_e3 = triangles[v].triangle_across_e3 - 1; 
+                 }
+             }
             triangles.erase(triangles.begin() + j);
         }
     }
@@ -890,64 +905,33 @@ DelaunayTriangulation::PrintTri(OneTriangle *t)
 //       the base triangle and the edge triangle, the function creates vectors for
 //       use in the 2nd verify function
 float *
-DelaunayTriangulation::FindVectors(OneTriangle base, OneTriangle * overEdge) {
+DelaunayTriangulation::FindVectors(int edgeOfEdgeTri, OneTriangle * overEdge) {
     // will have 2 vectors, vector 1 is vectors[0-1], vector 2 is vectors[2-3]
     float * vectors = new float[4];
     for (int i = 0; i < 4; i++)     // init for error checking
         vectors[i] = 999.9;
-    if ((base.p1[0] == overEdge->p1[0]) && (base.p1[1] == overEdge->p1[1])) {        // base p1 matches overedge p1
-        if ((base.p2[0] == overEdge->p2[0]) && (base.p2[1] == overEdge->p2[1])) {      // base p2 matches overedge p2
-            // create vector 1 (x2-x1, y2-y1)
-            vectors[0] = overEdge->p1[0] - overEdge->p3[0];
-            vectors[1] = overEdge->p1[1] - overEdge->p3[1];
-            // create vector 2 (x3-x1, y3-y1)
-            vectors[2] = overEdge->p2[0] - overEdge->p3[0];
-            vectors[3] = overEdge->p2[1] - overEdge->p3[1];
-        }
-        else {
-            // create vector 1 (x2-x1, y2-y1)
-            vectors[0] = overEdge->p1[0] - overEdge->p2[0];
-            vectors[1] = overEdge->p1[1] - overEdge->p2[1];
-            // create vector 2 (x3-x1, y3-y1)
-            vectors[2] = overEdge->p3[0] - overEdge->p2[0];
-            vectors[3] = overEdge->p3[1] - overEdge->p2[1];
-        }
+    if (edgeOfEdgeTri == 1) {
+        // create vector 1 (x2-x1, y2-y1)
+        vectors[0] = overEdge->p1[0] - overEdge->p3[0];
+        vectors[1] = overEdge->p1[1] - overEdge->p3[1];
+        // create vector 2 (x3-x1, y3-y1)
+        vectors[2] = overEdge->p2[0] - overEdge->p3[0];
+        vectors[3] = overEdge->p2[1] - overEdge->p3[1];
     }
-    else if ((base.p1[0] == overEdge->p2[0]) && (base.p1[1] == overEdge->p2[1])) {   // base p1 matches overedge p2
-        if ((base.p2[0] == overEdge->p1[0]) && (base.p2[1] == overEdge->p1[1])) {
-            // create vector 1 (x2-x1, y2-y1)
-            vectors[0] = overEdge->p1[0] - overEdge->p3[0];
-            vectors[1] = overEdge->p1[1] - overEdge->p3[1];
-            // create vector 2 (x3-x1, y3-y1)
-            vectors[2] = overEdge->p2[0] - overEdge->p3[0];
-            vectors[3] = overEdge->p2[1] - overEdge->p3[1];
-        }
-        else {
-            // create vector 1 (x2-x1, y2-y1)
-            vectors[0] = overEdge->p2[0] - overEdge->p1[0];
-            vectors[1] = overEdge->p2[1] - overEdge->p1[1];
-            // create vector 2 (x3-x1, y3-y1)
-            vectors[2] = overEdge->p3[0] - overEdge->p1[0];
-            vectors[3] = overEdge->p3[1] - overEdge->p1[1];
-        }
+    else if (edgeOfEdgeTri == 2) {
+        vectors[0] = overEdge->p2[0] - overEdge->p1[0];
+        vectors[1] = overEdge->p2[1] - overEdge->p1[1];
+        vectors[2] = overEdge->p3[0] - overEdge->p1[0];
+        vectors[3] = overEdge->p3[1] - overEdge->p1[1];
     }
-    else if ((base.p1[0] == overEdge->p3[0]) && (base.p1[1] == overEdge->p3[1])) {
-        if ((base.p2[0] == overEdge->p2[0]) && (base.p2[1] == overEdge->p2[1])) {
-            // create vector 1 (x2-x1, y2-y1)
-            vectors[0] = overEdge->p1[0] - overEdge->p3[0];
-            vectors[1] = overEdge->p1[1] - overEdge->p3[1];
-            // create vector 2 (x3-x1, y3-y1)
-            vectors[2] = overEdge->p2[0] - overEdge->p3[0];
-            vectors[3] = overEdge->p2[1] - overEdge->p3[1];
-        }
-        else {
-            // create vector 1 (x2-x1, y2-y1)
-            vectors[0] = overEdge->p1[0] - overEdge->p2[0];
-            vectors[1] = overEdge->p1[1] - overEdge->p2[1];
-            // create vector 2 (x3-x1, y3-y1)
-            vectors[2] = overEdge->p3[0] - overEdge->p2[0];
-            vectors[3] = overEdge->p3[1] - overEdge->p2[1];
-        }
+    else if (edgeOfEdgeTri == 3) {
+        vectors[0] = overEdge->p1[0] - overEdge->p2[0];
+        vectors[1] = overEdge->p1[1] - overEdge->p2[1];
+        vectors[2] = overEdge->p3[0] - overEdge->p2[0];
+        vectors[3] = overEdge->p3[1] - overEdge->p2[1];
+    }
+    else {
+        cerr << "in findvectors, edge is not 1 2 or 3" << endl;
     }
     return vectors;
 }
@@ -987,41 +971,47 @@ void   DelaunayTriangulation::VerifyMeetDC() {
     //     (v2x, v2y) = 2nd vector
     float * outsideVectors;
     float * insideVectors = new float[4];
+    float * pt4;
     for (int i = 0; i < numTriangles; i++) {
-        if (triangles[i].triangle_across_e1) {    // check over edge 1
-            insideVectors[0] = triangles[i].p1[0] - triangles[i].p3[0];
-            insideVectors[1] = triangles[i].p1[1] - triangles[i].p3[1];
-            insideVectors[2] = triangles[i].p2[0] - triangles[i].p3[0];
-            insideVectors[3] = triangles[i].p2[1] - triangles[i].p3[1];
-            outsideVectors = FindVectors(triangles[i], triangles[i].triangle_across_e1);
-            if (SumAngles(insideVectors, outsideVectors)) {
-                cerr << "SUM > 180 DEGREES OVER EDGE 1 FOR TRI INDEX: " << i << "\n------------\n" << endl;
-                PrintTri(&triangles[i]);
-                PrintTri(triangles[i].triangle_across_e1);
+        if (triangles[i].p1[0] != -100000000.0f) {
+            if (triangles[i].triangle_across_e1) {    // check over edge 1
+                insideVectors[0] = triangles[i].p1[0] - triangles[i].p3[0];
+                insideVectors[1] = triangles[i].p1[1] - triangles[i].p3[1];
+                insideVectors[2] = triangles[i].p2[0] - triangles[i].p3[0];
+                insideVectors[3] = triangles[i].p2[1] - triangles[i].p3[1];
+                int outEdge = WhatEdge(triangles[i].p1, triangles[i].p2, triangles[i].triangle_across_e1);
+                outsideVectors = FindVectors(outEdge, triangles[i].triangle_across_e1);
+                if (SumAngles(insideVectors, outsideVectors)) {
+                    cerr << "SUM > 180 DEGREES OVER EDGE 1 FOR TRI INDEX: " << i << "\n------------\n" << endl;
+                    PrintTri(&triangles[i]);
+                    PrintTri(triangles[i].triangle_across_e1);
+                }
             }
-        }
-        if (triangles[i].triangle_across_e2) {    // check over edge 2
-            insideVectors[0] = triangles[i].p2[0] - triangles[i].p1[0];
-            insideVectors[1] = triangles[i].p2[1] - triangles[i].p1[1];
-            insideVectors[2] = triangles[i].p3[0] - triangles[i].p1[0];
-            insideVectors[3] = triangles[i].p3[1] - triangles[i].p1[1];
-            outsideVectors = FindVectors(triangles[i], triangles[i].triangle_across_e2);
-            if (SumAngles(insideVectors, outsideVectors)) {
-                cerr << "SUM > 180 DEGREES OVER EDGE 2 FOR TRI INDEX: " << i << "\n------------\n" << endl;
-                PrintTri(&triangles[i]);
-                PrintTri(triangles[i].triangle_across_e2);
+            if (triangles[i].triangle_across_e2) {    // check over edge 2
+                insideVectors[0] = triangles[i].p2[0] - triangles[i].p1[0];
+                insideVectors[1] = triangles[i].p2[1] - triangles[i].p1[1];
+                insideVectors[2] = triangles[i].p3[0] - triangles[i].p1[0];
+                insideVectors[3] = triangles[i].p3[1] - triangles[i].p1[1];
+                int outEdge = WhatEdge(triangles[i].p2, triangles[i].p3, triangles[i].triangle_across_e2);
+                outsideVectors = FindVectors(outEdge, triangles[i].triangle_across_e2);
+                if (SumAngles(insideVectors, outsideVectors)) {
+                    cerr << "SUM > 180 DEGREES OVER EDGE 2 FOR TRI INDEX: " << i << "\n------------\n" << endl;
+                    PrintTri(&triangles[i]);
+                    PrintTri(triangles[i].triangle_across_e2);
+                }
             }
-        }
-        if (triangles[i].triangle_across_e3) {   // check over edge 3
-            insideVectors[0] = triangles[i].p1[0] - triangles[i].p2[0];
-            insideVectors[1] = triangles[i].p1[1] - triangles[i].p2[1];
-            insideVectors[2] = triangles[i].p3[0] - triangles[i].p2[0];
-            insideVectors[3] = triangles[i].p3[1] - triangles[i].p2[1];
-            outsideVectors = FindVectors(triangles[i], triangles[i].triangle_across_e3);
-            if (SumAngles(insideVectors, outsideVectors)) {
-                cerr << "SUM > 180 DEGREES OVER EDGE 3 FOR TRI INDEX: " << i << "\n-----------\n" << endl;
-                PrintTri(&triangles[i]);
-                PrintTri(triangles[i].triangle_across_e3);
+            if (triangles[i].triangle_across_e3) {   // check over edge 3
+                insideVectors[0] = triangles[i].p1[0] - triangles[i].p2[0];
+                insideVectors[1] = triangles[i].p1[1] - triangles[i].p2[1];
+                insideVectors[2] = triangles[i].p3[0] - triangles[i].p2[0];
+                insideVectors[3] = triangles[i].p3[1] - triangles[i].p2[1];
+                int outEdge = WhatEdge(triangles[i].p3, triangles[i].p1, triangles[i].triangle_across_e3);
+                outsideVectors = FindVectors(outEdge, triangles[i].triangle_across_e3);
+                if (SumAngles(insideVectors, outsideVectors)) {
+                    cerr << "SUM > 180 DEGREES OVER EDGE 3 FOR TRI INDEX: " << i << "\n-----------\n" << endl;
+                    PrintTri(&triangles[i]);
+                    PrintTri(triangles[i].triangle_across_e3);
+                }
             }
         }
     }
