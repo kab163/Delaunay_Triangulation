@@ -11,7 +11,7 @@ using std::cerr;
 using std::endl;
 
 
-#define NUM_POINTS 100
+#define NUM_POINTS 10000
 
 // OUR CONVENTION
 // 
