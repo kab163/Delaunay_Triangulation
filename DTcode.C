@@ -239,9 +239,10 @@ void DelaunayTriangulation::DelBoundingTri()
 
     int ncells = triangles.size();
     int edge;
+    int j;
     float EPSILON = 0.0000000001f;
 
-    for (int j = ncells - 1; j >= 0; j--) { 
+    for (j = ncells - 1; j >= 0; j--) { 
         if ((fabs(triangles[j].p1[0] - (-1)) < EPSILON) ||
             (fabs(triangles[j].p2[0] - (-1)) < EPSILON) ||
             (fabs(triangles[j].p3[0] - (-1)) < EPSILON) ||
@@ -291,6 +292,13 @@ void DelaunayTriangulation::DelBoundingTri()
                 }
             }
             
+            //triangles.erase(triangles.begin() + j);
+            triangles[j].p1[0] = -100000000.0f;
+        }
+    }
+
+    for (j = ncells - 1; j >= 0; j--) { 
+        if (triangles[j].p1[0] == -100000000.0f) {
             triangles.erase(triangles.begin() + j);
         }
     }
@@ -847,7 +855,7 @@ DelaunayTriangulation::WhatEdge(float *pt1, float *pt2, OneTriangle *tri)
         return 2;
     }
     else {                   //Not in Triangle, Shouldn't return this
-        //printf("Triangle didn't have the point\n");
+        printf("Triangle didn't have the point\n");
         //printf("%f\t%f\n", pt1[0], pt1[1]);
         //printf("%f\t%f\n", pt2[0], pt2[1]);
         //PrintTri(tri);
@@ -986,8 +994,11 @@ void   DelaunayTriangulation::VerifyMeetDC() {
             insideVectors[2] = triangles[i].p2[0] - triangles[i].p3[0];
             insideVectors[3] = triangles[i].p2[1] - triangles[i].p3[1];
             outsideVectors = FindVectors(triangles[i], triangles[i].triangle_across_e1);
-            if (SumAngles(insideVectors, outsideVectors))
+            if (SumAngles(insideVectors, outsideVectors)) {
                 cerr << "SUM > 180 DEGREES OVER EDGE 1 FOR TRI INDEX: " << i << "\n------------\n" << endl;
+                PrintTri(&triangles[i]);
+                PrintTri(triangles[i].triangle_across_e1);
+            }
         }
         if (triangles[i].triangle_across_e2) {    // check over edge 2
             insideVectors[0] = triangles[i].p2[0] - triangles[i].p1[0];
@@ -995,8 +1006,11 @@ void   DelaunayTriangulation::VerifyMeetDC() {
             insideVectors[2] = triangles[i].p3[0] - triangles[i].p1[0];
             insideVectors[3] = triangles[i].p3[1] - triangles[i].p1[1];
             outsideVectors = FindVectors(triangles[i], triangles[i].triangle_across_e2);
-            if (SumAngles(insideVectors, outsideVectors)) 
+            if (SumAngles(insideVectors, outsideVectors)) {
                 cerr << "SUM > 180 DEGREES OVER EDGE 2 FOR TRI INDEX: " << i << "\n------------\n" << endl;
+                PrintTri(&triangles[i]);
+                PrintTri(triangles[i].triangle_across_e2);
+            }
         }
         if (triangles[i].triangle_across_e3) {   // check over edge 3
             insideVectors[0] = triangles[i].p1[0] - triangles[i].p2[0];
@@ -1004,8 +1018,11 @@ void   DelaunayTriangulation::VerifyMeetDC() {
             insideVectors[2] = triangles[i].p3[0] - triangles[i].p2[0];
             insideVectors[3] = triangles[i].p3[1] - triangles[i].p2[1];
             outsideVectors = FindVectors(triangles[i], triangles[i].triangle_across_e3);
-            if (SumAngles(insideVectors, outsideVectors)) 
+            if (SumAngles(insideVectors, outsideVectors)) {
                 cerr << "SUM > 180 DEGREES OVER EDGE 3 FOR TRI INDEX: " << i << "\n-----------\n" << endl;
+                PrintTri(&triangles[i]);
+                PrintTri(triangles[i].triangle_across_e3);
+            }
         }
     }
     if (outsideVectors)
@@ -1026,6 +1043,7 @@ int main()
  
     //Make Tessellation meet Delaunay condition
     DT.Verify(); 
+    //DT.VerifyMeetDC();
     DT.DelBoundingTri();
     DT.VerifyMeetDC();
 
