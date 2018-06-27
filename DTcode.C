@@ -11,7 +11,7 @@ using std::cerr;
 using std::endl;
 
 
-#define NUM_POINTS 10000
+#define NUM_POINTS 100
 
 // OUR CONVENTION
 // 
@@ -131,6 +131,9 @@ class DelaunayTriangulation
     void   AddPoint(float, float);
     bool   CircumcircleCheck(float*, float*, float*, float*);
     void   Verify();
+    void   VerifyMeetDC();                                           // verify meet delaunay condition
+    bool   SumAngles(float *, float *);                              // method used to verify
+    float * FindVectors(OneTriangle, OneTriangle *);                 // helps verify DC
     void   DelBoundingTri();
     void   WriteOutTriangle(char *filename);
     bool   AltCircumcircleCheck(float*, float*, float*, float*);
@@ -141,6 +144,7 @@ class DelaunayTriangulation
     std::vector<OneTriangle>  triangles;
     float DetHelp(float, float, float, float);
     void EdgeFlip(int, float*, int);
+    
 };
 
 void DelaunayTriangulation::Verify()
@@ -679,8 +683,8 @@ DelaunayTriangulation::AddPoint(float x1, float y1)
 //
             OneTriangle original_triangle = triangles[i];
             OneTriangle *TA = original_triangle.triangle_across_e1;
-            OneTriangle *TC = original_triangle.triangle_across_e2; //KB
-            OneTriangle *TB = original_triangle.triangle_across_e3; //KB
+            OneTriangle *TC = original_triangle.triangle_across_e2; 
+            OneTriangle *TB = original_triangle.triangle_across_e3;
 
             // split triangle i into three triangles
             // note: no edge flipping or Delaunay business.
@@ -691,34 +695,34 @@ DelaunayTriangulation::AddPoint(float x1, float y1)
 
             // now add two more triangles.
             OneTriangle new_triangle1;
-            new_triangle1.p1[0] = x1; //KB
-            new_triangle1.p1[1] = y1; //KB
-            new_triangle1.p2[0] = original_triangle.p2[0]; //KB
-            new_triangle1.p2[1] = original_triangle.p2[1]; //KB
-            new_triangle1.p3[0] = original_triangle.p3[0]; //KB
-            new_triangle1.p3[1] = original_triangle.p3[1]; //KB
+            new_triangle1.p1[0] = x1; 
+            new_triangle1.p1[1] = y1; 
+            new_triangle1.p2[0] = original_triangle.p2[0]; 
+            new_triangle1.p2[1] = original_triangle.p2[1];
+            new_triangle1.p3[0] = original_triangle.p3[0]; 
+            new_triangle1.p3[1] = original_triangle.p3[1];
             triangles.emplace_back(new_triangle1);
             int index = triangles.size()-1;
             OneTriangle *T3 = &(triangles[index]);
 
             OneTriangle new_triangle2;
-            new_triangle2.p1[0] = original_triangle.p1[0]; //KB
-            new_triangle2.p1[1] = original_triangle.p1[1]; //KB
-            new_triangle2.p2[0] = x1; //KB
-            new_triangle2.p2[1] = y1; //KB
-            new_triangle2.p3[0] = original_triangle.p3[0]; //KB
-            new_triangle2.p3[1] = original_triangle.p3[1]; //KB
+            new_triangle2.p1[0] = original_triangle.p1[0];
+            new_triangle2.p1[1] = original_triangle.p1[1];
+            new_triangle2.p2[0] = x1;
+            new_triangle2.p2[1] = y1;
+            new_triangle2.p3[0] = original_triangle.p3[0]; 
+            new_triangle2.p3[1] = original_triangle.p3[1]; 
             triangles.emplace_back(new_triangle2);
             OneTriangle *T2 = &(triangles[index+1]);
         
-            T1->triangle_across_e1 = TA; //TA
-            T1->triangle_across_e2 = T3; //T3
+            T1->triangle_across_e1 = TA; 
+            T1->triangle_across_e2 = T3;
             T1->triangle_across_e3 = T2;
             T2->triangle_across_e1 = T1;
-            T2->triangle_across_e2 = T3; //T3
-            T2->triangle_across_e3 = TB; //TB
-            T3->triangle_across_e1 = T1; //T1
-            T3->triangle_across_e2 = TC; //TC
+            T2->triangle_across_e2 = T3;
+            T2->triangle_across_e3 = TB;
+            T3->triangle_across_e1 = T1;
+            T3->triangle_across_e2 = TC; 
             T3->triangle_across_e3 = T2;
             if (TA != NULL) {
                 int edge = WhatEdge(original_triangle.p1, original_triangle.p2, TA);
@@ -794,7 +798,6 @@ DelaunayTriangulation::CircumcircleCheck(float* ptA, float* ptB, float* ptC, flo
     if (result < 0) return false; //ptD lies outside circumcircle
     else if (result > 0) return true; //ptD lies inside circumcircle
     else if (result == 0) return false; // ptD lies ON the circle, for now acting like it lies outside...
-    //what about if it equals zero? Lies *on* the circle...
 }
 
 bool
@@ -874,6 +877,143 @@ DelaunayTriangulation::PrintTri(OneTriangle *t)
     printf("**********************************************\n\n");
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//// after determing correct point to use by comparing the common points between
+//       the base triangle and the edge triangle, the function creates vectors for
+//       use in the 2nd verify function
+float *
+DelaunayTriangulation::FindVectors(OneTriangle base, OneTriangle * overEdge) {
+    // will have 2 vectors, vector 1 is vectors[0-1], vector 2 is vectors[2-3]
+    float * vectors = new float[4];
+    for (int i = 0; i < 4; i++)     // init for error checking
+        vectors[i] = 999.9;
+    if ((base.p1[0] == overEdge->p1[0]) && (base.p1[1] == overEdge->p1[1])) {        // base p1 matches overedge p1
+        if ((base.p2[0] == overEdge->p2[0]) && (base.p2[1] == overEdge->p2[1])) {      // base p2 matches overedge p2
+            // create vector 1 (x2-x1, y2-y1)
+            vectors[0] = overEdge->p1[0] - overEdge->p3[0];
+            vectors[1] = overEdge->p1[1] - overEdge->p3[1];
+            // create vector 2 (x3-x1, y3-y1)
+            vectors[2] = overEdge->p2[0] - overEdge->p3[0];
+            vectors[3] = overEdge->p2[1] - overEdge->p3[1];
+        }
+        else {
+            // create vector 1 (x2-x1, y2-y1)
+            vectors[0] = overEdge->p1[0] - overEdge->p2[0];
+            vectors[1] = overEdge->p1[1] - overEdge->p2[1];
+            // create vector 2 (x3-x1, y3-y1)
+            vectors[2] = overEdge->p3[0] - overEdge->p2[0];
+            vectors[3] = overEdge->p3[1] - overEdge->p2[1];
+        }
+    }
+    else if ((base.p1[0] == overEdge->p2[0]) && (base.p1[1] == overEdge->p2[1])) {   // base p1 matches overedge p2
+        if ((base.p2[0] == overEdge->p1[0]) && (base.p2[1] == overEdge->p1[1])) {
+            // create vector 1 (x2-x1, y2-y1)
+            vectors[0] = overEdge->p1[0] - overEdge->p3[0];
+            vectors[1] = overEdge->p1[1] - overEdge->p3[1];
+            // create vector 2 (x3-x1, y3-y1)
+            vectors[2] = overEdge->p2[0] - overEdge->p3[0];
+            vectors[3] = overEdge->p2[1] - overEdge->p3[1];
+        }
+        else {
+            // create vector 1 (x2-x1, y2-y1)
+            vectors[0] = overEdge->p2[0] - overEdge->p1[0];
+            vectors[1] = overEdge->p2[1] - overEdge->p1[1];
+            // create vector 2 (x3-x1, y3-y1)
+            vectors[2] = overEdge->p3[0] - overEdge->p1[0];
+            vectors[3] = overEdge->p3[1] - overEdge->p1[1];
+        }
+    }
+    else if ((base.p1[0] == overEdge->p3[0]) && (base.p1[1] == overEdge->p3[1])) {
+        if ((base.p2[0] == overEdge->p2[0]) && (base.p2[1] == overEdge->p2[1])) {
+            // create vector 1 (x2-x1, y2-y1)
+            vectors[0] = overEdge->p1[0] - overEdge->p3[0];
+            vectors[1] = overEdge->p1[1] - overEdge->p3[1];
+            // create vector 2 (x3-x1, y3-y1)
+            vectors[2] = overEdge->p2[0] - overEdge->p3[0];
+            vectors[3] = overEdge->p2[1] - overEdge->p3[1];
+        }
+        else {
+            // create vector 1 (x2-x1, y2-y1)
+            vectors[0] = overEdge->p1[0] - overEdge->p2[0];
+            vectors[1] = overEdge->p1[1] - overEdge->p2[1];
+            // create vector 2 (x3-x1, y3-y1)
+            vectors[2] = overEdge->p3[0] - overEdge->p2[0];
+            vectors[3] = overEdge->p3[1] - overEdge->p2[1];
+        }
+    }
+    return vectors;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//// sums angles from vectors given in insideV (vectors composed of points in main triangle
+//       and outsideV (vectors composed of points in edge triangle)
+bool   DelaunayTriangulation::SumAngles(float * insideV, float * outsideV) { 
+    float m1 = sqrt((insideV[0] * insideV[0]) + (insideV[1] * insideV[1]));
+    float m2 = sqrt((insideV[2] * insideV[2]) + (insideV[3] * insideV[3]));
+    float insideRadians = acos((insideV[0]*insideV[2] + insideV[1] * insideV[3]) / (m1 * m2) );
+    m1 = sqrt((outsideV[0] * outsideV[0]) + (outsideV[1] * outsideV[1]));
+    m2 = sqrt((outsideV[2] * outsideV[2]) + (outsideV[3] * outsideV[3]));
+    float outsideRadians = acos((outsideV[0]*outsideV[2] + outsideV[1] * outsideV[3]) / (m1 * m2) );
+    if ((insideRadians + outsideRadians) > 3.14159265359) { 
+        cerr << "---------\nsum over 180 degrees: " << (insideRadians + outsideRadians) * (180.0/3.14159) << endl;
+        cerr << "inside degree: " << (insideRadians * (180.0/3.14159)) << "\toutside degree: " << (outsideRadians * (180.0/3.14159)) << endl;
+        cerr << "\ninside: \tvector1 (" << insideV[0] << ", " << insideV[1] << ")";
+        cerr << "\tvector2 (" << insideV[2] << ", " << insideV[3] << ")" << endl;
+        cerr << "outside:\tvector1 (" << outsideV[0] << ", " << outsideV[1] << ")";
+        cerr << "\tvector2 (" << outsideV[2] << ", " << outsideV[3] << ")" << endl;
+        return true;
+    }
+    else 
+        return false;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//// function to check whether meets delaunay condition - sums angle of opposite 
+//       points' vectors (4th point to check and point opposite from evaluated edge)
+//       and determines whether sum is over 180 degrees
+void   DelaunayTriangulation::VerifyMeetDC() {
+    int numTriangles = triangles.size();
+    // outside vectors are vectors made up of triangle from 4th point, inside vectors from current index triangle
+    //     arrays organized as [v1x, v1y, v2x, v2y], where
+    //     (v1x, v2y) = 1st vector
+    //     (v2x, v2y) = 2nd vector
+    float * outsideVectors;
+    float * insideVectors = new float[4];
+    for (int i = 0; i < numTriangles; i++) {
+        if (triangles[i].triangle_across_e1) {    // check over edge 1
+            insideVectors[0] = triangles[i].p1[0] - triangles[i].p3[0];
+            insideVectors[1] = triangles[i].p1[1] - triangles[i].p3[1];
+            insideVectors[2] = triangles[i].p2[0] - triangles[i].p3[0];
+            insideVectors[3] = triangles[i].p2[1] - triangles[i].p3[1];
+            outsideVectors = FindVectors(triangles[i], triangles[i].triangle_across_e1);
+            if (SumAngles(insideVectors, outsideVectors))
+                cerr << "SUM > 180 DEGREES OVER EDGE 1 FOR TRI INDEX: " << i << "\n------------\n" << endl;
+        }
+        if (triangles[i].triangle_across_e2) {    // check over edge 2
+            insideVectors[0] = triangles[i].p2[0] - triangles[i].p1[0];
+            insideVectors[1] = triangles[i].p2[1] - triangles[i].p1[1];
+            insideVectors[2] = triangles[i].p3[0] - triangles[i].p1[0];
+            insideVectors[3] = triangles[i].p3[1] - triangles[i].p1[1];
+            outsideVectors = FindVectors(triangles[i], triangles[i].triangle_across_e2);
+            if (SumAngles(insideVectors, outsideVectors)) 
+                cerr << "SUM > 180 DEGREES OVER EDGE 2 FOR TRI INDEX: " << i << "\n------------\n" << endl;
+        }
+        if (triangles[i].triangle_across_e3) {   // check over edge 3
+            insideVectors[0] = triangles[i].p1[0] - triangles[i].p2[0];
+            insideVectors[1] = triangles[i].p1[1] - triangles[i].p2[1];
+            insideVectors[2] = triangles[i].p3[0] - triangles[i].p2[0];
+            insideVectors[3] = triangles[i].p3[1] - triangles[i].p2[1];
+            outsideVectors = FindVectors(triangles[i], triangles[i].triangle_across_e3);
+            if (SumAngles(insideVectors, outsideVectors)) 
+                cerr << "SUM > 180 DEGREES OVER EDGE 3 FOR TRI INDEX: " << i << "\n-----------\n" << endl;
+        }
+    }
+    if (outsideVectors)
+        delete [] outsideVectors;
+    if (insideVectors)
+        delete [] insideVectors;
+}
+
 int main()
 {
     float *pts = PointsGenerator(NUM_POINTS, 2);
@@ -887,6 +1027,9 @@ int main()
     //Make Tessellation meet Delaunay condition
     DT.Verify(); 
     DT.DelBoundingTri();
+    //DT.VerifyMeetDC();
+
+    //function to double check correctness of DT should go here
 
     char *filename = (char *)"kristi.vtk";
     DT.WriteOutTriangle(filename);
