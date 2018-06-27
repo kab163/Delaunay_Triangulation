@@ -300,9 +300,9 @@ void DelaunayTriangulation::DelBoundingTri()
 
     for (j = ncells - 1; j >= 0; j--) { 
         if (triangles[j].p1[0] == -100000000.0f) {
-            // this code is used to move the pointers of all triangles back by 1
-            //   to account for an element being erased if the triangles are in further
-            //   memory positions than the triangle to be erased (erase reallocates)
+            // moves pointers which are pointing to location after element about to be
+            //    erased back by 1 to account for automatic vector reallocation to preserve
+            //    contiguous-ness
             for (int v = 0; v < triangles.size(); v++) {
                  if (triangles[v].triangle_across_e1 > &(triangles[j])) {
                      triangles[v].triangle_across_e1 = triangles[v].triangle_across_e1 - 1;
@@ -901,9 +901,7 @@ DelaunayTriangulation::PrintTri(OneTriangle *t)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-//// after determing correct point to use by comparing the common points between
-//       the base triangle and the edge triangle, the function creates vectors for
-//       use in the 2nd verify function
+////  creates vectors (outsidevectors) for use in sumangles in 2nd verify function
 float *
 DelaunayTriangulation::FindVectors(int edgeOfEdgeTri, OneTriangle * overEdge) {
     // will have 2 vectors, vector 1 is vectors[0-1], vector 2 is vectors[2-3]
@@ -971,7 +969,6 @@ void   DelaunayTriangulation::VerifyMeetDC() {
     //     (v2x, v2y) = 2nd vector
     float * outsideVectors;
     float * insideVectors = new float[4];
-    float * pt4;
     for (int i = 0; i < numTriangles; i++) {
         if (triangles[i].p1[0] != -100000000.0f) {
             if (triangles[i].triangle_across_e1) {    // check over edge 1
