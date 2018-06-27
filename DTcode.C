@@ -847,10 +847,10 @@ DelaunayTriangulation::WhatEdge(float *pt1, float *pt2, OneTriangle *tri)
         return 2;
     }
     else {                   //Not in Triangle, Shouldn't return this
-        printf("Triangle didn't have the point\n");
-        printf("%f\t%f\n", pt1[0], pt1[1]);
-        printf("%f\t%f\n", pt2[0], pt2[1]);
-        PrintTri(tri);
+        //printf("Triangle didn't have the point\n");
+        //printf("%f\t%f\n", pt1[0], pt1[1]);
+        //printf("%f\t%f\n", pt2[0], pt2[1]);
+        //PrintTri(tri);
         return 0;
     }
 }
@@ -1027,7 +1027,7 @@ int main()
     //Make Tessellation meet Delaunay condition
     DT.Verify(); 
     DT.DelBoundingTri();
-    //DT.VerifyMeetDC();
+    DT.VerifyMeetDC();
 
     //function to double check correctness of DT should go here
 
