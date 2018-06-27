@@ -11,7 +11,7 @@ using std::cerr;
 using std::endl;
 
 
-#define NUM_POINTS 1000
+#define NUM_POINTS 10000
 
 // OUR CONVENTION
 // 
@@ -131,7 +131,7 @@ class DelaunayTriangulation
     void   AddPoint(float, float);
     bool   CircumcircleCheck(float*, float*, float*, float*);
     void   Verify();
-    void   VerifyMeetDC();             // verifty meet delaunay condition
+    void   VerifyMeetDC();                             // verify meet delaunay condition
     bool   SumAngles(float *, float *);                // method used to verify
     void   DelBoundingTri();
     void   WriteOutTriangle(char *filename);
@@ -143,15 +143,19 @@ class DelaunayTriangulation
     std::vector<OneTriangle>  triangles;
     float DetHelp(float, float, float, float);
     void EdgeFlip(int, float*, int);
-    float * FindVectors(OneTriangle, OneTriangle *);
+    float * FindVectors(OneTriangle, OneTriangle *);   // helps verify DC
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//// after determing correct point to use by comparing the common points between
+//       the base triangle and the edge triangle, the function creates vectors for
+//       use in the 2nd verify function
 float *
 DelaunayTriangulation::FindVectors(OneTriangle base, OneTriangle * overEdge) {
     // will have 2 vectors, vector 1 is vectors[0-1], vector 2 is vectors[2-3]
     float * vectors = new float[4];
     for (int i = 0; i < 4; i++)     // init for error checking
-        vectors[i] = 111.1;
+        vectors[i] = 999.9;
     if ((base.p1[0] == overEdge->p1[0]) && (base.p1[1] == overEdge->p1[1])) {        // base p1 matches overedge p1
         if ((base.p2[0] == overEdge->p2[0]) && (base.p2[1] == overEdge->p2[1])) {      // base p2 matches overedge p2
             // create vector 1 (x2-x1, y2-y1)
@@ -160,7 +164,6 @@ DelaunayTriangulation::FindVectors(OneTriangle base, OneTriangle * overEdge) {
             // create vector 2 (x3-x1, y3-y1)
             vectors[2] = overEdge->p2[0] - overEdge->p3[0];
             vectors[3] = overEdge->p2[1] - overEdge->p3[1];
-            //return overEdge->p3;
         }
         else {
             // create vector 1 (x2-x1, y2-y1)
@@ -169,9 +172,6 @@ DelaunayTriangulation::FindVectors(OneTriangle base, OneTriangle * overEdge) {
             // create vector 2 (x3-x1, y3-y1)
             vectors[2] = overEdge->p3[0] - overEdge->p2[0];
             vectors[3] = overEdge->p3[1] - overEdge->p2[1];
-            //*pLoc = 2;
-            //numB++;
-            //return overEdge->p2;
         }
     }
     else if ((base.p1[0] == overEdge->p2[0]) && (base.p1[1] == overEdge->p2[1])) {   // base p1 matches overedge p2
@@ -182,9 +182,6 @@ DelaunayTriangulation::FindVectors(OneTriangle base, OneTriangle * overEdge) {
             // create vector 2 (x3-x1, y3-y1)
             vectors[2] = overEdge->p2[0] - overEdge->p3[0];
             vectors[3] = overEdge->p2[1] - overEdge->p3[1];
-            //*pLoc = 3;
-            //numC++;
-            //return overEdge->p3;
         }
         else {
             // create vector 1 (x2-x1, y2-y1)
@@ -193,9 +190,6 @@ DelaunayTriangulation::FindVectors(OneTriangle base, OneTriangle * overEdge) {
             // create vector 2 (x3-x1, y3-y1)
             vectors[2] = overEdge->p3[0] - overEdge->p1[0];
             vectors[3] = overEdge->p3[1] - overEdge->p1[1];
-            //*pLoc = 1;
-            //numD++;
-            //return overEdge->p1;
         }
     }
     else if ((base.p1[0] == overEdge->p3[0]) && (base.p1[1] == overEdge->p3[1])) {
@@ -206,9 +200,6 @@ DelaunayTriangulation::FindVectors(OneTriangle base, OneTriangle * overEdge) {
             // create vector 2 (x3-x1, y3-y1)
             vectors[2] = overEdge->p2[0] - overEdge->p3[0];
             vectors[3] = overEdge->p2[1] - overEdge->p3[1];
-            //*pLoc = 3;
-            //numE++;
-            //return overEdge->p3;
         }
         else {
             // create vector 1 (x2-x1, y2-y1)
@@ -217,15 +208,12 @@ DelaunayTriangulation::FindVectors(OneTriangle base, OneTriangle * overEdge) {
             // create vector 2 (x3-x1, y3-y1)
             vectors[2] = overEdge->p3[0] - overEdge->p2[0];
             vectors[3] = overEdge->p3[1] - overEdge->p2[1];
-            //*pLoc = 2;
-            //numF++;
-            //return overEdge->p2;
         }
     }
-
     return vectors;
 }
 
+//////////////////////////////////////////////////////////////////////////////
 void DelaunayTriangulation::Verify()
 {
     int ncells = triangles.size();
@@ -291,6 +279,9 @@ void DelaunayTriangulation::Verify()
     printf("Total flips: %d\n", totalFlips);
 }
 
+//////////////////////////////////////////////////////////////////////////////
+//// sums angles from vectors given in insideV (vectors composed of points in main triangle
+//       and outsideV (vectors composed of points in edge triangle)
 bool   DelaunayTriangulation::SumAngles(float * insideV, float * outsideV) { 
     float m1 = sqrt((insideV[0] * insideV[0]) + (insideV[1] * insideV[1]));
     float m2 = sqrt((insideV[2] * insideV[2]) + (insideV[3] * insideV[3]));
@@ -298,9 +289,9 @@ bool   DelaunayTriangulation::SumAngles(float * insideV, float * outsideV) {
     m1 = sqrt((outsideV[0] * outsideV[0]) + (outsideV[1] * outsideV[1]));
     m2 = sqrt((outsideV[2] * outsideV[2]) + (outsideV[3] * outsideV[3]));
     float outsideRadians = acos((outsideV[0]*outsideV[2] + outsideV[1] * outsideV[3]) / (m1 * m2) );
-    if ((insideRadians + outsideRadians) > 3.14159) { 
+    if ((insideRadians + outsideRadians) > 3.14159265359) { 
         cerr << "---------\nsum over 180 degrees: " << (insideRadians + outsideRadians) * (180.0/3.14159) << endl;
-        cerr << "\ninside degree: " << (insideRadians * (180.0/3.14159)) << "\toutside degree: " << (outsideRadians * (180.0/3.14159)) << endl;
+        cerr << "inside degree: " << (insideRadians * (180.0/3.14159)) << "\toutside degree: " << (outsideRadians * (180.0/3.14159)) << endl;
         cerr << "\ninside: \tvector1 (" << insideV[0] << ", " << insideV[1] << ")";
         cerr << "\tvector2 (" << insideV[2] << ", " << insideV[3] << ")" << endl;
         cerr << "outside:\tvector1 (" << outsideV[0] << ", " << outsideV[1] << ")";
@@ -311,7 +302,11 @@ bool   DelaunayTriangulation::SumAngles(float * insideV, float * outsideV) {
         return false;
 }
 
-void   DelaunayTriangulation::VerifyMeetDC() {             // verify meet delaunay condition
+//////////////////////////////////////////////////////////////////////////////
+//// function to check whether meets delaunay condition - sums angle of opposite 
+//       points' vectors (4th point to check and point opposite from evaluated edge)
+//       and determines whether sum is over 180 degrees
+void   DelaunayTriangulation::VerifyMeetDC() {
     int numTriangles = triangles.size();
     // outside vectors are vectors made up of triangle from 4th point, inside vectors from current index triangle
     //     arrays organized as [v1x, v1y, v2x, v2y], where
@@ -355,7 +350,7 @@ void   DelaunayTriangulation::VerifyMeetDC() {             // verify meet delaun
         delete [] insideVectors;
 }
 
-
+//////////////////////////////////////////////////////////////////////////////
 void DelaunayTriangulation::DelBoundingTri() 
 {
     /*
@@ -423,6 +418,7 @@ void DelaunayTriangulation::DelBoundingTri()
 
 }
 
+//////////////////////////////////////////////////////////////////////////////
 void DelaunayTriangulation::EdgeFlip(int j, float* p4_og, int edge)
 {
     /*
@@ -717,6 +713,7 @@ void DelaunayTriangulation::EdgeFlip(int j, float* p4_og, int edge)
     else printf("\n\n\n***edge error!***\n\n\n");/* */
 }
 
+//////////////////////////////////////////////////////////////////////////////
 //DO NOT EDIT THIS FUNCTION
 void DelaunayTriangulation::WriteOutTriangle(char *filename)
 {
@@ -757,7 +754,8 @@ void DelaunayTriangulation::WriteOutTriangle(char *filename)
                             ncells, celltypes, conn, 0,
                             NULL, NULL, NULL, NULL);
 }
-    
+
+////////////////////////////////////////////////////////////////////////////// 
 void
 DelaunayTriangulation::Initialize(float x1, float y1, float x2, float y2, float x3, float y3, int point_count)
 {
@@ -775,6 +773,7 @@ DelaunayTriangulation::Initialize(float x1, float y1, float x2, float y2, float 
     triangles.emplace_back(ot);
 }
 
+//////////////////////////////////////////////////////////////////////////////
 void
 DelaunayTriangulation::AddPoint(float x1, float y1)
 {
@@ -944,6 +943,7 @@ DelaunayTriangulation::CircumcircleCheck(float* ptA, float* ptB, float* ptC, flo
     //what about if it equals zero? Lies *on* the circle...
 }
 
+//////////////////////////////////////////////////////////////////////////////
 bool
 DelaunayTriangulation::AltCircumcircleCheck(float *ptA, float *ptB, float *ptC, float *ptD)
 {
@@ -959,6 +959,7 @@ DelaunayTriangulation::AltCircumcircleCheck(float *ptA, float *ptB, float *ptC, 
            (cx_ * cx_ + cy_ * cy_) * (ax_ * by_ - bx_ * ay_)) > 0;
 }
 
+//////////////////////////////////////////////////////////////////////////////
 //Returns the side of the triangle that is composed of these two points 
 int
 DelaunayTriangulation::WhatEdge(float *pt1, float *pt2, OneTriangle *tri)
@@ -998,7 +999,6 @@ DelaunayTriangulation::WhatEdge(float *pt1, float *pt2, OneTriangle *tri)
     }
     else                    //Not in Triangle, Shouldn't return this
     {
-        cerr << "ERROR WHATEDGE RETURNS 0" << endl;
         return 0;
     }
 }
@@ -1036,7 +1036,7 @@ int main()
         DT.AddPoint(pts[2*i], pts[2*i+1]);
  	
     //Make Tessellation meet Delaunay condition
-    DT.Verify(); 
+    DT.Verify();
     DT.DelBoundingTri();
     DT.VerifyMeetDC();
 

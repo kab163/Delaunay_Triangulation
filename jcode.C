@@ -328,16 +328,32 @@ void DelaunayTriangulation::EdgeFlip(int j, float* p4, OneTriangle * edgeTriangl
     float * eP1 = edgeTriangle->p1;
     float * eP2 = edgeTriangle->p2;
     float * eP3 = edgeTriangle-> p3;
-    if (edge == 1) {
-        if (*pLoc == 1) {
-            triangles[j].p2 = p4;
-            int edgeTedge = WhatEdge(bP1, bP2, edgeTriangle);
-            if (eP2 == bP1) {		// then next point is clockwise if orientation not mirred as in addpoint convention
-        }
-    }
-            
     /*
     if (edge == 1) {
+        int edgeTriEdge = WhatEdge(bP1, bP2, edgeTriangle);
+        if (edgeTriEdge == 1) {
+            if (edgeTriangle->p3[0] != p4[0] || edgeTriangle->p3[1] != p4[1])
+                cerr << "ERROR! edgetriangle point does not match with 4th point outside circumcircle!" << endl; 
+             }
+             
+        }
+        if (*pLoc == 1) { 		// if 4th point is edge triangle p1
+            triangles[j].p2 = p4;
+            if (eP2 == bP1) {		// base p1 is edge triangle p2, 
+                edgeTriangle->p2 = bP3;
+                edgeTriangle->triangle_across_e1 = triangles[j];
+            }
+    }
+    
+    */      
+    ///*
+    if (edge == 1) {
+        int edgeTriEdge = WhatEdge(bP1, bP2, edgeTriangle);
+        if (edgeTriEdge == 1) {
+            if (edgeTriangle->p3[0] != p4[0] || edgeTriangle->p3[1] != p4[1])
+                cerr << "ERROR! edgetriangle point does not match with 4th point outside circumcircle!" << endl; 
+        }
+       cerr << "edgeTriEdge when edge is 1 is: " << edgeTriEdge << endl;
        triangles[j].triangle_across_e1->p1[0] = p4[0];
        triangles[j].triangle_across_e1->p1[1] = p4[1];
        triangles[j].triangle_across_e1->p2[0] = triangles[j].p2[0];
@@ -348,6 +364,8 @@ void DelaunayTriangulation::EdgeFlip(int j, float* p4, OneTriangle * edgeTriangl
        triangles[j].p2[0] = p4[0];
        triangles[j].p2[1] = p4[1];
        //// ADDED:
+       //OneTriangle * tW = triangles[j].triangle->
+       //-------
        OneTriangle * original_e2 = triangles[j].triangle_across_e2;
        triangles[j].triangle_across_e2 = triangles[j].triangle_across_e3;
        triangles[j].triangle_across_e3 = edgeTriangle->triangle_across_e1;
@@ -395,7 +413,7 @@ void DelaunayTriangulation::EdgeFlip(int j, float* p4, OneTriangle * edgeTriangl
        ////
 
     } else printf("\n\n\n***edge error!***\n\n\n");
-    */
+    //*/
 }
 
 //DO NOT EDIT THIS FUNCTION
