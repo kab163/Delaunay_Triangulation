@@ -4,6 +4,7 @@
 #include "visit_writer.c"
 #include <vector>
 #include <time.h>
+#include <sys/time.h>
 
 using std::vector;
 
@@ -11,7 +12,7 @@ using std::cerr;
 using std::endl;
 
 
-#define NUM_POINTS 20000
+#define NUM_POINTS 10000
 
 // OUR CONVENTION
 // 
@@ -303,6 +304,7 @@ void DelaunayTriangulation::DelBoundingTri()
             // moves pointers which are pointing to location after element about to be
             //    erased back by 1 to account for automatic vector reallocation to preserve
             //    contiguous-ness
+            
             for (int v = 0; v < triangles.size(); v++) {
                  if (triangles[v].triangle_across_e1 > &(triangles[j])) {
                      triangles[v].triangle_across_e1 = triangles[v].triangle_across_e1 - 1;
@@ -314,6 +316,7 @@ void DelaunayTriangulation::DelBoundingTri()
                      triangles[v].triangle_across_e3 = triangles[v].triangle_across_e3 - 1; 
                  }
              }
+
             triangles.erase(triangles.begin() + j);
         }
     }
@@ -1023,15 +1026,43 @@ int main()
     float *pts = PointsGenerator(NUM_POINTS, 2);
     DelaunayTriangulation DT;
 
-    //Make initial Tessellation
+    
+    //Declare timers
+    struct timeval start, end;
+    
+    //Make initial triangulation.  Allocate memory for vector
     DT.Initialize(-1, -1, 2, -1, .5, 2, NUM_POINTS);
-    for (int i = 0 ; i < NUM_POINTS ; i++)
+    
+
+    //AddPoints to triangulation.  Produces and initial tesselation
+    gettimeofday(&start, NULL);
+    for (int i = 0 ; i < NUM_POINTS ; i++) {
         DT.AddPoint(pts[2*i], pts[2*i+1]);
- 
-    //Make Tessellation meet Delaunay condition
+    }
+    gettimeofday(&end, NULL);
+    
+    //AddPoint time report
+    double runtime = end.tv_sec + (end.tv_usec / 1000000.0) - start.tv_sec - (start.tv_usec / 1000000.0);
+    printf("\nComputation time for %d AddPoint Operations: %.4f s\n\n", NUM_POINTS, runtime);
+
+    //Make tessellation meet Delaunay condition
+    gettimeofday(&start, NULL);
     DT.Verify(); 
-    //DT.VerifyMeetDC();
+    gettimeofday(&end, NULL);
+
+    //Verify time report
+    runtime = end.tv_sec + (end.tv_usec / 1000000.0) - start.tv_sec - (start.tv_usec / 1000000.0);
+    printf("\nComputation time for Verify method: %.4f s\n\n", runtime);
+
+    //Delete triangles connected to bounding triangle vertices
+    gettimeofday(&start, NULL);
     DT.DelBoundingTri();
+    gettimeofday(&end, NULL);
+    
+    //DelBoundingTriangle report
+    runtime = end.tv_sec + (end.tv_usec / 1000000.0) - start.tv_sec - (start.tv_usec / 1000000.0);
+    printf("\nComputation time for DelBoundingTriangle method: %.4f s\n\n", runtime);
+    
     DT.VerifyMeetDC();
 
     //function to double check correctness of DT should go here
