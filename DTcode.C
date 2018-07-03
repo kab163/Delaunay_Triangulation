@@ -34,6 +34,7 @@ float *
 PointsGenerator(int numPoints, int dim = 2)
 {
     float *array = new float[numPoints*dim];
+    //srand(time(NULL));
     for (int i = 0 ; i < numPoints ; i++)
     {
         for (int j = 0 ; j < dim ; j++)
@@ -156,6 +157,7 @@ void DelaunayTriangulation::Verify()
     int totalFlips = 0;
     int numTrianglesFlipped = 0;
     bool done = false;
+    FILE *flipLog = fopen("flip.log", "w");     //Create file for logging flips per iteration
 
     while (!done) {
         numTrianglesFlipped = 0;
@@ -165,19 +167,16 @@ void DelaunayTriangulation::Verify()
                         && WhatEdge(triangles[j].p1, triangles[j].p2, triangles[j].triangle_across_e1)) {
                     numTrianglesFlipped++; 
                     EdgeFlip(j,triangles[j].triangle_across_e1->p2, 1);
-                    //break;
                 }
                 else if (AltCircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e1->p1)
                             && WhatEdge(triangles[j].p1, triangles[j].p2, triangles[j].triangle_across_e1)) {
                     numTrianglesFlipped++; 
                     EdgeFlip(j,triangles[j].triangle_across_e1->p1, 1);
-                    //break;
                 }
                 else if (AltCircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e1->p3)
                         && WhatEdge(triangles[j].p1, triangles[j].p2, triangles[j].triangle_across_e1)) {
                     numTrianglesFlipped++; 
                     EdgeFlip(j,triangles[j].triangle_across_e1->p3, 1);
-                    //break;
                 }
             }
 
@@ -186,19 +185,16 @@ void DelaunayTriangulation::Verify()
                         && WhatEdge(triangles[j].p3, triangles[j].p2, triangles[j].triangle_across_e2)) { 
                     numTrianglesFlipped++;
                     EdgeFlip(j,triangles[j].triangle_across_e2->p1, 2);
-                    //break;
                 }
                 else if (AltCircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e2->p2)
                         && WhatEdge(triangles[j].p3, triangles[j].p2, triangles[j].triangle_across_e2)) { 
                     numTrianglesFlipped++;
                     EdgeFlip(j,triangles[j].triangle_across_e2->p2, 2);
-                    //break;
                 }
                 else if (AltCircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e2->p3)
                         && WhatEdge(triangles[j].p3, triangles[j].p2, triangles[j].triangle_across_e2)) { 
                     numTrianglesFlipped++;
                     EdgeFlip(j,triangles[j].triangle_across_e2->p3, 2);
-                    //break;
                 }
             } 
 
@@ -207,22 +203,22 @@ void DelaunayTriangulation::Verify()
                         && WhatEdge(triangles[j].p3, triangles[j].p1, triangles[j].triangle_across_e3)) { 
                     numTrianglesFlipped++;
                     EdgeFlip(j, triangles[j].triangle_across_e3->p3, 3);
-                    //break;
                 }
                 else if(AltCircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e3->p2)
                         && WhatEdge(triangles[j].p3, triangles[j].p1, triangles[j].triangle_across_e3)) { 
                     numTrianglesFlipped++;
                     EdgeFlip(j, triangles[j].triangle_across_e3->p2, 3);
-                    //break;
                 }
                 else if(AltCircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e3->p1)
                         && WhatEdge(triangles[j].p3, triangles[j].p1, triangles[j].triangle_across_e3)) { 
                     numTrianglesFlipped++;
                     EdgeFlip(j, triangles[j].triangle_across_e3->p1, 3);
-                    //break;
                 }
             }
         }
+
+        fprintf(flipLog, "%d\t%d\n", iteration, numTrianglesFlipped);
+
         totalFlips += numTrianglesFlipped;
         done = (numTrianglesFlipped == 0 ? true : false);
         iteration++;
@@ -230,6 +226,7 @@ void DelaunayTriangulation::Verify()
 
     printf("Iteration count: %d\n", iteration);
     printf("Total flips: %d\n", totalFlips);
+    fclose(flipLog);
 }
 
 void DelaunayTriangulation::DelBoundingTri() 
@@ -373,7 +370,6 @@ void DelaunayTriangulation::EdgeFlip(int j, float* p4_og, int edge)
 
         else {
             //should Not reach this point. ie adjacent triangle cannot be null
-            //printf("Edge 1 Triangle across is null or does not share edge\n");
             t = NULL;
             ot = NULL;
         }
@@ -408,9 +404,6 @@ void DelaunayTriangulation::EdgeFlip(int j, float* p4_og, int edge)
         else if (edge == 3) {
             triangles[j].triangle_across_e1 -> triangle_across_e3 = &(triangles[j]);
         }
-        else {
-            //printf("Issue 1\n");
-        }
        
         //Fix x across
         edge = WhatEdge(triangles[j].triangle_across_e2 -> p2, triangles[j].triangle_across_e2 -> p3, triangles[j].triangle_across_e2 -> triangle_across_e2); 
@@ -423,16 +416,11 @@ void DelaunayTriangulation::EdgeFlip(int j, float* p4_og, int edge)
         else if (edge == 3) {
             triangles[j].triangle_across_e2 -> triangle_across_e2 -> triangle_across_e3 = triangles[j].triangle_across_e2;
         }
-        else {
-            //printf("Issue 2\n");
-        }
 
     } 
     
     else if (edge == 2) {
         //Debugging
-        //PrintTri(&triangles[j]);
-        //PrintTri(triangles[j].triangle_across_e2);
 
         OneTriangle *t;
         OneTriangle *ot;
@@ -464,7 +452,6 @@ void DelaunayTriangulation::EdgeFlip(int j, float* p4_og, int edge)
 
         else {
             //Shouldn't reach this point, ie adjacent triangle is not NULL
-            //printf("Edge 2 Triangle across is null or does not share edge\n");
             t = NULL;
             ot = NULL;
         }
@@ -498,9 +485,6 @@ void DelaunayTriangulation::EdgeFlip(int j, float* p4_og, int edge)
         else if (edge == 3) {
             triangles[j].triangle_across_e2 -> triangle_across_e3 = &(triangles[j]);
         }
-        else {
-            //printf("Issue 3\n");
-        }
        
         edge = WhatEdge(triangles[j].triangle_across_e1 -> p1, triangles[j].triangle_across_e1 -> p2, triangles[j].triangle_across_e1 -> triangle_across_e1); 
         if (edge == 1) {
@@ -511,13 +495,6 @@ void DelaunayTriangulation::EdgeFlip(int j, float* p4_og, int edge)
         }
         else if (edge == 3) {
             triangles[j].triangle_across_e1 -> triangle_across_e1 -> triangle_across_e3= triangles[j].triangle_across_e1;
-        }
-        else {
-            //printf("Issue 4\n");
-
-            //Debugging
-            //PrintTri(&triangles[j]);
-            //PrintTri(triangles[j].triangle_across_e1);
         }
 
     } 
@@ -553,7 +530,6 @@ void DelaunayTriangulation::EdgeFlip(int j, float* p4_og, int edge)
         }
         else {
             //Shouldn't reach this point, ie adjacent triangle is not NULL
-            //printf("Edge 3 Triangle across is null or does not share edge\n");
             t = NULL;
             ot = NULL;
         }
@@ -874,9 +850,6 @@ DelaunayTriangulation::WhatEdge(float *pt1, float *pt2, OneTriangle *tri)
     }
     else {                   //Not in Triangle, Shouldn't return this
         printf("Triangle didn't have the point\n");
-        //printf("%f\t%f\n", pt1[0], pt1[1]);
-        //printf("%f\t%f\n", pt2[0], pt2[1]);
-        //PrintTri(tri);
         return 0;
     }
 }
