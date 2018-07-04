@@ -5,14 +5,14 @@
 #include <vector>
 #include <time.h>
 #include <sys/time.h>
+#include <random>
 
 using std::vector;
 
 using std::cerr;
 using std::endl;
 
-
-#define NUM_POINTS 10000
+#define NUM_POINTS 20000
 
 // OUR CONVENTION
 // 
@@ -35,11 +35,14 @@ PointsGenerator(int numPoints, int dim = 2)
 {
     float *array = new float[numPoints*dim];
     //srand(time(NULL));
+    std::default_random_engine generator;
+    std::normal_distribution<float> distribution(0.5,0.6);
     for (int i = 0 ; i < numPoints ; i++)
     {
         for (int j = 0 ; j < dim ; j++)
         {
-            float rand_value = rand() % 100000 / 100000.0;
+            //float rand_value = rand() % 100000 / 100000.0;
+            float rand_value = distribution(generator);
             array[dim*i+j] = rand_value;
         }
     }
