@@ -7,7 +7,11 @@ kristi.vtk: Do not modify this file. This is the output file that is generated. 
 
 visit_writer.c: Do not modify this file. This is necessary for the function which outputs the file above.
 
-DTcode.C: This is the version of the DT code file that should be modified. It can be compiled with g++, but make sure the above file is present in the same folder or you will get a compilation error.
+DTcode.C: This is the version of the DT code file that should be modified. It can be compiled with g++ (may have to use the "-std=c++11" flag), but make sure the above file is present in the same folder or you will get a compilation error. 
+
+DelTInput.C: This is a version of the latest DT code that now has input file reading capabilities. It reads in the .txt input file and makes a Delaunay Triangulation accordingly. To give this .C file a new input, make sure you change the name of the input file within main to handle it. Right now it's set to "input.txt". That should be the only change necessary.
+
+input.txt: A sample input file. Currently, this input file holds the x-y coordinates of the 48 US capitals (doesn't include Hawaii or Alaska). This input file is usually used for the Traveling Salesman Problem.
 
 To compile:
 g++ DTcode.C
