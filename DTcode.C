@@ -12,7 +12,15 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-#define NUM_POINTS 20000
+#define NUM_POINTS 10000
+
+#define X1 -1
+#define Y1 -1
+#define X2  2
+#define Y2 -1
+#define X3 .5
+#define Y3  2
+
 
 // OUR CONVENTION
 // 
@@ -35,14 +43,14 @@ PointsGenerator(int numPoints, int dim = 2)
 {
     float *array = new float[numPoints*dim];
     //srand(time(NULL));
-    std::default_random_engine generator;
-    std::normal_distribution<float> distribution(0.5,0.6);
+    //std::default_random_engine generator;
+    //std::normal_distribution<float> distribution(0.5,0.6);
     for (int i = 0 ; i < numPoints ; i++)
     {
         for (int j = 0 ; j < dim ; j++)
         {
-            //float rand_value = rand() % 100000 / 100000.0;
-            float rand_value = distribution(generator);
+            float rand_value = rand() % 100000 / 100000.0;
+            //float rand_value = distribution(generator);
             array[dim*i+j] = rand_value;
         }
     }
@@ -245,15 +253,15 @@ void DelaunayTriangulation::DelBoundingTri()
     float EPSILON = 0.0000000001f;
 
     for (j = ncells - 1; j >= 0; j--) { 
-        if ((fabs(triangles[j].p1[0] - (-1)) < EPSILON) ||
-            (fabs(triangles[j].p2[0] - (-1)) < EPSILON) ||
-            (fabs(triangles[j].p3[0] - (-1)) < EPSILON) ||
-            (fabs(triangles[j].p1[0] - (2)) < EPSILON) ||
-            (fabs(triangles[j].p2[0] - (2)) < EPSILON) ||
-            (fabs(triangles[j].p3[0] - (2)) < EPSILON) ||
-            (fabs(triangles[j].p1[1] - (2)) < EPSILON) ||
-            (fabs(triangles[j].p2[1] - (2)) < EPSILON) ||
-            (fabs(triangles[j].p3[1] - (2)) < EPSILON)) 
+        if ((fabs(triangles[j].p1[0] - (X1)) < EPSILON) ||
+            (fabs(triangles[j].p2[0] - (X1)) < EPSILON) ||
+            (fabs(triangles[j].p3[0] - (X1)) < EPSILON) ||
+            (fabs(triangles[j].p1[0] - (X2)) < EPSILON) ||
+            (fabs(triangles[j].p2[0] - (X2)) < EPSILON) ||
+            (fabs(triangles[j].p3[0] - (X2)) < EPSILON) ||
+            (fabs(triangles[j].p1[1] - (Y3)) < EPSILON) ||
+            (fabs(triangles[j].p2[1] - (Y3)) < EPSILON) ||
+            (fabs(triangles[j].p3[1] - (Y3)) < EPSILON)) 
         {
             if (triangles[j].triangle_across_e1 != NULL) {
                 edge = WhatEdge(triangles[j].p1, triangles[j].p2, triangles[j].triangle_across_e1);
@@ -1007,7 +1015,7 @@ int main()
     struct timeval start, end;
     
     //Make initial triangulation.  Allocate memory for vector
-    DT.Initialize(-1, -1, 2, -1, .5, 2, NUM_POINTS);
+    DT.Initialize(X1, Y1, X2, Y2, X3, Y3, NUM_POINTS);
     
 
     //AddPoints to triangulation.  Produces and initial tesselation
