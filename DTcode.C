@@ -12,14 +12,7 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-#define NUM_POINTS 10000
-
-#define X1 -1
-#define Y1 -1
-#define X2  2
-#define Y2 -1
-#define X3 .5
-#define Y3  2
+#define NUM_POINTS 10500
 
 
 // OUR CONVENTION
@@ -141,18 +134,19 @@ OneTriangle::ContainsPoint(float x, float y)
 class DelaunayTriangulation
 {
   public:
-    void   Initialize(float, float, float, float, float, float, int);
+    float *Initialize(float *, int);
     void   AddPoint(float, float);
     bool   CircumcircleCheck(float*, float*, float*, float*);
     void   Verify();
     void   VerifyMeetDC();                                           // verify meet delaunay condition
     bool   SumAngles(float *, float *);                              // method used to verify
-    float * FindVectors(int, OneTriangle *);                         // helps verify DC
-    void   DelBoundingTri();
+    float *FindVectors(int, OneTriangle *);                         // helps verify DC
+    void   DelBoundingTri(float *);
     void   WriteOutTriangle(char *filename);
     bool   AltCircumcircleCheck(float*, float*, float*, float*);
     int    WhatEdge(float *, float *, OneTriangle *);
     void   PrintTri(OneTriangle *);
+    float *FindBoundingBox(float *);
 
   private:
     std::vector<OneTriangle>  triangles;
@@ -240,7 +234,7 @@ void DelaunayTriangulation::Verify()
     fclose(flipLog);
 }
 
-void DelaunayTriangulation::DelBoundingTri() 
+void DelaunayTriangulation::DelBoundingTri(float *bounding_tri) 
 {
     /*
       Here is where I delete the first, bounding triangle - update any triangles who have a triangle_across_e*
@@ -250,18 +244,18 @@ void DelaunayTriangulation::DelBoundingTri()
     int ncells = triangles.size();
     int edge;
     int j;
-    float EPSILON = 0.0000000001f;
+    float EPSILON = 0.00001f;
 
     for (j = ncells - 1; j >= 0; j--) { 
-        if ((fabs(triangles[j].p1[0] - (X1)) < EPSILON) ||
-            (fabs(triangles[j].p2[0] - (X1)) < EPSILON) ||
-            (fabs(triangles[j].p3[0] - (X1)) < EPSILON) ||
-            (fabs(triangles[j].p1[0] - (X2)) < EPSILON) ||
-            (fabs(triangles[j].p2[0] - (X2)) < EPSILON) ||
-            (fabs(triangles[j].p3[0] - (X2)) < EPSILON) ||
-            (fabs(triangles[j].p1[1] - (Y3)) < EPSILON) ||
-            (fabs(triangles[j].p2[1] - (Y3)) < EPSILON) ||
-            (fabs(triangles[j].p3[1] - (Y3)) < EPSILON)) 
+        if ((fabs(triangles[j].p1[0] - (bounding_tri[2])) < EPSILON) ||
+            (fabs(triangles[j].p2[0] - (bounding_tri[2])) < EPSILON) ||
+            (fabs(triangles[j].p3[0] - (bounding_tri[2])) < EPSILON) ||
+            (fabs(triangles[j].p1[0] - (bounding_tri[4])) < EPSILON) ||
+            (fabs(triangles[j].p2[0] - (bounding_tri[4])) < EPSILON) ||
+            (fabs(triangles[j].p3[0] - (bounding_tri[4])) < EPSILON) ||
+            (fabs(triangles[j].p1[1] - (bounding_tri[1])) < EPSILON) ||
+            (fabs(triangles[j].p2[1] - (bounding_tri[1])) < EPSILON) ||
+            (fabs(triangles[j].p3[1] - (bounding_tri[1])) < EPSILON)) 
         {
             if (triangles[j].triangle_across_e1 != NULL) {
                 edge = WhatEdge(triangles[j].p1, triangles[j].p2, triangles[j].triangle_across_e1);
@@ -642,21 +636,32 @@ void DelaunayTriangulation::WriteOutTriangle(char *filename)
                             NULL, NULL, NULL, NULL);
 }
     
-void
-DelaunayTriangulation::Initialize(float x1, float y1, float x2, float y2, float x3, float y3, int point_count)
+float *
+DelaunayTriangulation::Initialize(float *bounding_box, int point_count)
 {
-    OneTriangle ot;
-    ot.p1[0] = x1;
-    ot.p1[1] = y1;
-    ot.p2[0] = x2;
-    ot.p2[1] = y2;
-    ot.p3[0] = x3;
-    ot.p3[1] = y3;
+    float *bounding_tri = new float[6];
+    OneTriangle ot ;
+    ot.p1[0] = (bounding_box[0] + bounding_box[1]) / 2;    
+    ot.p1[1] = 2 * bounding_box[3] - bounding_box[2];    
+    ot.p2[0] = 2 * bounding_box[0] - ot.p1[0];    
+    ot.p2[1] = bounding_box[2];    
+    ot.p3[0] = 2 * bounding_box[1] - ot.p1[0];    
+    ot.p3[1] = bounding_box[2];    
 
+    bounding_tri[0] = ot.p1[0];
+    bounding_tri[1] = ot.p1[1];
+    bounding_tri[2] = ot.p2[0];
+    bounding_tri[3] = ot.p2[1];
+    bounding_tri[4] = ot.p3[0];
+    bounding_tri[5] = ot.p3[1];
+    
     //Reserve a contiguous portion of memory for that triangles.
     //Note: Could be source of error is point number is very large.
     triangles.reserve(2 * point_count + 1);
+
     triangles.emplace_back(ot);
+
+    return bounding_tri;
 }
 
 void
@@ -887,8 +892,7 @@ DelaunayTriangulation::PrintTri(OneTriangle *t)
     printf("**********************************************\n\n");
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-////  creates vectors (outsidevectors) for use in sumangles in 2nd verify function
+//        creates vectors (outsidevectors) for use in sumangles in 2nd verify function
 float *
 DelaunayTriangulation::FindVectors(int edgeOfEdgeTri, OneTriangle * overEdge) {
     // will have 2 vectors, vector 1 is vectors[0-1], vector 2 is vectors[2-3]
@@ -921,8 +925,7 @@ DelaunayTriangulation::FindVectors(int edgeOfEdgeTri, OneTriangle * overEdge) {
     return vectors;
 }
 
-//////////////////////////////////////////////////////////////////////////////
-//// sums angles from vectors given in insideV (vectors composed of points in main triangle
+//       sums angles from vectors given in insideV (vectors composed of points in main triangle
 //       and outsideV (vectors composed of points in edge triangle)
 bool   DelaunayTriangulation::SumAngles(float * insideV, float * outsideV) { 
     float m1 = sqrt((insideV[0] * insideV[0]) + (insideV[1] * insideV[1]));
@@ -944,8 +947,7 @@ bool   DelaunayTriangulation::SumAngles(float * insideV, float * outsideV) {
         return false;
 }
 
-//////////////////////////////////////////////////////////////////////////////
-//// function to check whether meets delaunay condition - sums angle of opposite 
+//       function to check whether meets delaunay condition - sums angle of opposite 
 //       points' vectors (4th point to check and point opposite from evaluated edge)
 //       and determines whether sum is over 180 degrees
 void   DelaunayTriangulation::VerifyMeetDC() {
@@ -1005,6 +1007,46 @@ void   DelaunayTriangulation::VerifyMeetDC() {
         delete [] insideVectors;
 }
 
+float *
+DelaunayTriangulation::FindBoundingBox(float *points) {
+    float *bounding_box = new float[4];
+    float x_min = 0.0f;
+    float x_max = 0.0f;
+    float y_min = 0.0f;
+    float y_max = 0.0f;
+
+    int i;
+
+    for (i = 0; i < NUM_POINTS; i++) {
+        if (points[2 * i] < x_min) {
+            x_min = points[2 * i];
+        }
+        if (points[2 * i] > x_max) {
+            x_max = points[2 * i];
+        }
+        if (points[2 * i + 1] < y_min) {
+            y_min = points[2 * i + 1];
+        }
+        if (points[2 * i + 1] > y_max) {
+            y_max = points[2 * i + 1];
+        }
+    }
+
+    /*
+    if (x_min == NULL || y_min == NULL) {
+        printf("No points provided\n");
+    }
+    */
+    
+    bounding_box[0] = x_min - 1.0f;
+    bounding_box[1] = x_max + 1.0f;
+    bounding_box[2] = y_min - 1.0f;
+    bounding_box[3] = y_max + 1.0f;
+
+    return bounding_box;
+}
+
+
 int main()
 {
     float *pts = PointsGenerator(NUM_POINTS, 2);
@@ -1014,13 +1056,17 @@ int main()
     //Declare timers
     struct timeval start, end;
     
+    //TODO Add code for determining Bounding Triangle 
+    float *bounding_box = DT.FindBoundingBox(pts);
+
     //Make initial triangulation.  Allocate memory for vector
-    DT.Initialize(X1, Y1, X2, Y2, X3, Y3, NUM_POINTS);
+    float *bounding_tri = DT.Initialize(bounding_box, NUM_POINTS);
     
 
     //AddPoints to triangulation.  Produces and initial tesselation
     gettimeofday(&start, NULL);
     for (int i = 0 ; i < NUM_POINTS ; i++) {
+        //printf("%f\t%f\n", pts[2*i], pts[2*i+1]);
         DT.AddPoint(pts[2*i], pts[2*i+1]);
     }
     gettimeofday(&end, NULL);
@@ -1040,7 +1086,7 @@ int main()
 
     //Delete triangles connected to bounding triangle vertices
     gettimeofday(&start, NULL);
-    DT.DelBoundingTri();
+    DT.DelBoundingTri(bounding_tri);
     gettimeofday(&end, NULL);
     
     //DelBoundingTriangle report
@@ -1053,5 +1099,8 @@ int main()
 
     char *filename = (char *)"kristi.vtk";
     DT.WriteOutTriangle(filename);
+
+    delete [] bounding_box;
+    delete [] bounding_tri;
     return 0;
 }
