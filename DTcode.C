@@ -12,7 +12,7 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-#define NUM_POINTS 10500
+#define NUM_POINTS 50000
 
 
 // OUR CONVENTION
@@ -35,15 +35,15 @@ float *
 PointsGenerator(int numPoints, int dim = 2)
 {
     float *array = new float[numPoints*dim];
-    //srand(time(NULL));
-    //std::default_random_engine generator;
-    //std::normal_distribution<float> distribution(0.5,0.6);
+    //srand(time(NULL));   //USE THIS LINE TO SEED RAND
+    std::default_random_engine generator;
+    std::normal_distribution<float> distribution(0.5,0.6);
     for (int i = 0 ; i < numPoints ; i++)
     {
         for (int j = 0 ; j < dim ; j++)
         {
-            float rand_value = rand() % 100000 / 100000.0;
-            //float rand_value = distribution(generator);
+            float rand_value = rand() % 1000000 / 1000000.0;
+            //float rand_value = rand() % 1000000 / 100000.0 * distribution(generator);     //Point generation a la John.
             array[dim*i+j] = rand_value;
         }
     }
@@ -147,6 +147,8 @@ class DelaunayTriangulation
     int    WhatEdge(float *, float *, OneTriangle *);
     void   PrintTri(OneTriangle *);
     float *FindBoundingBox(float *);
+    void   EliminateCollinearity(float *);
+    bool   isCollinear(float, float, float, float, float, float);
 
   private:
     std::vector<OneTriangle>  triangles;
@@ -572,9 +574,6 @@ void DelaunayTriangulation::EdgeFlip(int j, float* p4_og, int edge)
         else if (edge == 3) {
             triangles[j].triangle_across_e3 -> triangle_across_e1 -> triangle_across_e3 = triangles[j].triangle_across_e3;
         }
-        else {
-            //printf("Issue 5\n");
-        }
        
         //fix t
         edge = WhatEdge(triangles[j].p2, triangles[j].p3, triangles[j].triangle_across_e2); 
@@ -586,9 +585,6 @@ void DelaunayTriangulation::EdgeFlip(int j, float* p4_og, int edge)
         }
         else if (edge == 3) {
             triangles[j].triangle_across_e2 -> triangle_across_e3 = &(triangles[j]);
-        }
-        else {
-            //printf("Issue 6\n");
         }
 
     }
@@ -640,6 +636,26 @@ float *
 DelaunayTriangulation::Initialize(float *bounding_box, int point_count)
 {
     float *bounding_tri = new float[6];
+
+    /* Create triangle enclosing bounding box
+     
+                       /@&
+                      @@.@@
+                     @@   @@
+                   *@@     #@%
+                  @@.       .@@
+                 @@           @@
+              ,@@&&&&&&&&&&&&&@@#
+              @@@@             @@@@
+             @@ &@             @& @@
+           .@@  &@             @&  &@/
+          &@/   &@             @&   /@&
+         @@     &@             @&     @@
+        @@      &@             @&      @@*
+      &@(       &@             @&       (@&
+     @@,........&@@@@@@@@@@@@@@@&.........@@
+
+    */
     OneTriangle ot ;
     ot.p1[0] = (bounding_box[0] + bounding_box[1]) / 2;    
     ot.p1[1] = 2 * bounding_box[3] - bounding_box[2];    
@@ -667,8 +683,23 @@ DelaunayTriangulation::Initialize(float *bounding_box, int point_count)
 void
 DelaunayTriangulation::AddPoint(float x1, float y1)
 {
+    float EPSILON = 0.000000001f;
     for (int i = 0 ; i < triangles.size() ; i++) {
-        if (triangles[i].ContainsPoint(x1, y1)) {
+        if ((fabs(x1 - triangles[i].p1[0]) < EPSILON && fabs(y1 - triangles[i].p1[1])) ||
+            (fabs(x1 - triangles[i].p1[0]) < EPSILON && fabs(y1 - triangles[i].p1[1])) ||
+            (fabs(x1 - triangles[i].p1[0]) < EPSILON && fabs(y1 - triangles[i].p1[1]))) {
+            continue;
+        }
+        else if (isCollinear(x1, y1, triangles[i].p1[0], triangles[i].p1[1], triangles[i].p2[0], triangles[i].p2[1])) {
+            continue;
+        }
+        else if (isCollinear(x1, y1, triangles[i].p3[0], triangles[i].p3[1], triangles[i].p2[0], triangles[i].p2[1])) {
+            continue;
+        }
+        else if (isCollinear(x1, y1, triangles[i].p1[0], triangles[i].p1[1], triangles[i].p3[0], triangles[i].p3[1])) {
+            continue;
+        }
+        else if (triangles[i].ContainsPoint(x1, y1)) {
 //
 // T0
 //      p1
@@ -1033,9 +1064,7 @@ DelaunayTriangulation::FindBoundingBox(float *points) {
     }
 
     /*
-    if (x_min == NULL || y_min == NULL) {
-        printf("No points provided\n");
-    }
+        Add a condition for determining if their are no points to use.
     */
     
     bounding_box[0] = x_min - 1.0f;
@@ -1046,12 +1075,54 @@ DelaunayTriangulation::FindBoundingBox(float *points) {
     return bounding_box;
 }
 
+bool
+DelaunayTriangulation::isCollinear(float x1, float y1, float x2, float y2, float x3, float y3) {
+    double EPSILON = 0.0001;
+    double slope_dif = (y2 - y1) / (x2 - x1) - ((y3 - y2) / (x3 - x2));
+    return (fabs(slope_dif) < EPSILON);
+}
+
+//This method is not operating properly.  Do not use.
+void
+DelaunayTriangulation::EliminateCollinearity(float *pts) {
+    int i, j, k, noiseApplied = 0;
+    double slope_dif, x1, y1, x2, y2, x3, y3;
+    for (i = 0; i < NUM_POINTS; i++) {
+        for (j = i; j < NUM_POINTS; j++) {
+            for (k = j; k < NUM_POINTS; k++) {
+                if (i != j && j != k && i != k) {
+                    x1 = pts[2 * i];
+                    x2 = pts[2 * j];
+                    x2 = pts[2 * k];
+                    y1 = pts[2 * i + 1];
+                    y2 = pts[2 * j + 1];
+                    y3 = pts[2 * k + 1];
+
+                    //area = x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2);
+                    slope_dif = (y2 - y1) / (x2 - x1) - ((y3 - y2) / (x3 - x2));
+                    if (fabs(slope_dif) < 0.0000000001) {
+                        /*
+                            printf("Points collinear\n");
+                            printf("%f\n", slope_dif);
+                            printf("%f\t%f\n", x1, y1);
+                            printf("%f\t%f\n", x2, y2);
+                            printf("%f\t%f\n", x3, y3);
+                            printf("**************************\n\n");
+                        */
+                        pts[2 * j] += rand() * 1000000 / 1000000.0;
+                        pts[2 * j + 1] += rand() * 1000000 / 1000000.0;
+                        noiseApplied++;
+                    }
+                }
+            }
+        }
+    }
+}
 
 int main()
 {
     float *pts = PointsGenerator(NUM_POINTS, 2);
     DelaunayTriangulation DT;
-
     
     //Declare timers
     struct timeval start, end;
@@ -1089,10 +1160,11 @@ int main()
     DT.DelBoundingTri(bounding_tri);
     gettimeofday(&end, NULL);
     
-    //DelBoundingTriangle report
+    //DelBoundingTriangle time report
     runtime = end.tv_sec + (end.tv_usec / 1000000.0) - start.tv_sec - (start.tv_usec / 1000000.0);
     printf("\nComputation time for DelBoundingTriangle method: %.4f s\n\n", runtime);
     
+    //Determine if the triangulation meets the Delaunay condition
     DT.VerifyMeetDC();
 
     //function to double check correctness of DT should go here
