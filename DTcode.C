@@ -11,7 +11,7 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-#define NUM_POINTS 20000
+#define NUM_POINTS 50000
 
 
 // OUR CONVENTION
@@ -602,21 +602,41 @@ DelaunayTriangulation::AddPoint(float x1, float y1)
 {
     float EPSILON = 0.000000001f;
     for (int i = 0 ; i < triangles.size() ; i++) {
+        /*
         if ((fabs(x1 - triangles[i].p1[0]) < EPSILON && fabs(y1 - triangles[i].p1[1])) ||
             (fabs(x1 - triangles[i].p1[0]) < EPSILON && fabs(y1 - triangles[i].p1[1])) ||
             (fabs(x1 - triangles[i].p1[0]) < EPSILON && fabs(y1 - triangles[i].p1[1]))) {
+            printf("Redundant points\n");
             continue;
         }
         else if (isCollinear(x1, y1, triangles[i].p1[0], triangles[i].p1[1], triangles[i].p2[0], triangles[i].p2[1])) {
+            printf("Collinear points\n");
             continue;
         }
         else if (isCollinear(x1, y1, triangles[i].p3[0], triangles[i].p3[1], triangles[i].p2[0], triangles[i].p2[1])) {
+            printf("Collinear points\n");
             continue;
         }
         else if (isCollinear(x1, y1, triangles[i].p1[0], triangles[i].p1[1], triangles[i].p3[0], triangles[i].p3[1])) {
+            printf("Collinear points\n");
             continue;
         }
-        else if (triangles[i].ContainsPoint(x1, y1)) {
+        else */
+        if (triangles[i].ContainsPoint(x1, y1)) {
+            if ((fabs(x1 - triangles[i].p1[0]) < EPSILON && fabs(y1 - triangles[i].p1[1])) ||
+                (fabs(x1 - triangles[i].p1[0]) < EPSILON && fabs(y1 - triangles[i].p1[1])) ||
+                (fabs(x1 - triangles[i].p1[0]) < EPSILON && fabs(y1 - triangles[i].p1[1]))) {
+                continue;
+            }
+            else if (isCollinear(x1, y1, triangles[i].p1[0], triangles[i].p1[1], triangles[i].p2[0], triangles[i].p2[1])) {
+                continue;
+            }
+            else if (isCollinear(x1, y1, triangles[i].p3[0], triangles[i].p3[1], triangles[i].p2[0], triangles[i].p2[1])) {
+                continue;
+            }
+            else if (isCollinear(x1, y1, triangles[i].p1[0], triangles[i].p1[1], triangles[i].p3[0], triangles[i].p3[1])) {
+                continue;
+            }
 //
 // T0
 //      p1
