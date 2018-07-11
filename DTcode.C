@@ -12,7 +12,7 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-#define NUM_POINTS 20000
+#define NUM_POINTS 40000
 
 
 // OUR CONVENTION
@@ -591,7 +591,7 @@ DelaunayTriangulation::Initialize(float *bounding_box, int point_count)
     
     //Reserve a contiguous portion of memory for that triangles.
     //Note: Could be source of error is point number is very large.
-    triangles.reserve(2 * point_count + 1);
+    triangles.reserve(4 * point_count + 1);
 
     triangles.emplace_back(ot);
 
@@ -604,27 +604,290 @@ DelaunayTriangulation::AddPoint(float x1, float y1)
     float EPSILON = 0.000000001f;
     for (int i = 0 ; i < triangles.size() ; i++) {
         if (triangles[i].ContainsPoint(x1, y1)) {
-            if ((fabs(x1 - triangles[i].p1[0]) < EPSILON && fabs(y1 - triangles[i].p1[1])) ||
-                (fabs(x1 - triangles[i].p1[0]) < EPSILON && fabs(y1 - triangles[i].p1[1])) ||
-                (fabs(x1 - triangles[i].p1[0]) < EPSILON && fabs(y1 - triangles[i].p1[1]))) {                               //There are redundant Points, just dont add it.
+            if ((fabs(x1 - triangles[i].p1[0]) < EPSILON && fabs(y1 - triangles[i].p1[1]) < EPSILON) ||
+                (fabs(x1 - triangles[i].p2[0]) < EPSILON && fabs(y1 - triangles[i].p2[1]) < EPSILON) ||
+                (fabs(x1 - triangles[i].p3[0]) < EPSILON && fabs(y1 - triangles[i].p3[1]) < EPSILON)) {                               //There are redundant Points, just dont add it.
                 //printf("Redundant Points\n");
                 return;
             }
             else if (isCollinear(x1, y1, triangles[i].p1[0], triangles[i].p1[1], triangles[i].p2[0], triangles[i].p2[1])) { //SIDE 1
                 //printf("Collinear Points\n");
                 //printf("Collinear Points on side 1: %d\n", i);
+                return;
                 
+                OneTriangle tri_B, tri_C;
+                OneTriangle *Q1, *Q2, *Q3, *Q4, *A, *B, *C, *D;
+                int edge, edge_Do;
+                float *p1 = new float[2];
+                float *p2 = new float[2];
+                float *p3 = new float[2];
+                float *p4 = new float[2];
+                float *p5 = new float[2];
+
+
+                A = &(triangles[i]);
+                D = A -> triangle_across_e1;
+
+                edge_Do = WhatEdge(A -> p1, A -> p2, D);
+
+                
+                
+                memcpy(p1, A -> p1, sizeof(float) * 2);
+                memcpy(p2, A -> p2, sizeof(float) * 2);
+                memcpy(p3, A -> p3, sizeof(float) * 2);
+                
+                p5[0] = x1;
+                p5[1] = y1;
+
+
+                Q2 = A -> triangle_across_e2;
+                Q1 = A -> triangle_across_e3;
+               
+                //Do edge specific assignment
+                if (edge_Do == 1) {
+                    Q3 = D -> triangle_across_e3;
+                    Q4 = D -> triangle_across_e2;
+
+                    memcpy(p4, D -> p3, sizeof(float) * 2);
+                }
+                else if (edge_Do == 2) {
+                    Q3 = D -> triangle_across_e1;
+                    Q4 = D -> triangle_across_e3;
+
+                    memcpy(p4, D -> p1, sizeof(float) * 2);
+                }
+                else if (edge_Do == 3) {
+                    Q3 = D -> triangle_across_e2;
+                    Q4 = D -> triangle_across_e1;
+
+                    memcpy(p4, D -> p2, sizeof(float) * 2);
+                }
+                else {
+                    printf("Something went wrong, you called what edge on either NULL Triangle or one that is not adjacent\n");
+                }
+                
+                memcpy(A -> p1, p1, sizeof(float) * 2);
+                memcpy(A -> p2, p5, sizeof(float) * 2);
+                memcpy(A -> p3, p3, sizeof(float) * 2);
+
+                memcpy(tri_B.p1, p5, sizeof(float) * 2);
+                memcpy(tri_B.p2, p2, sizeof(float) * 2);
+                memcpy(tri_B.p3, p3, sizeof(float) * 2);
+
+                memcpy(tri_C.p1, p5, sizeof(float) * 2);
+                memcpy(tri_C.p2, p4, sizeof(float) * 2);
+                memcpy(tri_C.p3, p2, sizeof(float) * 2);
+
+                memcpy(D -> p1, p1, sizeof(float) * 2);
+                memcpy(D -> p2, p4, sizeof(float) * 2);
+                memcpy(D -> p3, p5, sizeof(float) * 2);
+               
+                triangles.emplace_back(tri_B);
+                triangles.emplace_back(tri_C);
+                
+                int index = triangles.size() - 1;
+                B = &(triangles[index - 1]);
+                C = &(triangles[index]);
+
+                A -> triangle_across_e1 = D;
+                A -> triangle_across_e2 = B;
+                A -> triangle_across_e3 = Q1;
+
+                B -> triangle_across_e1 = C;
+                B -> triangle_across_e2 = Q2;
+                B -> triangle_across_e3 = A;
+                
+                C -> triangle_across_e1 = D;
+                C -> triangle_across_e2 = Q3;
+                C -> triangle_across_e3 = B;
+                
+                D -> triangle_across_e1 = Q4;
+                D -> triangle_across_e2 = C;
+                D -> triangle_across_e3 = A;
+
+                edge = WhatEdge(p1, p3, Q1);                //Fix Triangle Across for Q1
+                if (edge == 1)
+                    Q1 -> triangle_across_e1 = A;
+                else if (edge == 2)
+                    Q1 -> triangle_across_e2 = A;
+                else if (edge == 3)
+                    Q1 -> triangle_across_e3 = A;
+
+
+                edge = WhatEdge(p2, p3, Q2);                //Fix Triangle Across for Q2
+                if (edge == 1)
+                    Q2 -> triangle_across_e1 = B;
+                else if (edge == 2)
+                    Q2 -> triangle_across_e2 = B;
+                else if (edge == 3)
+                    Q2 -> triangle_across_e3 = B;
+
+                edge = WhatEdge(p2, p4, Q3);                //Fix Triangle Across for Q3
+                if (edge == 1)
+                    Q3 -> triangle_across_e1 = C;
+                else if (edge == 2)
+                    Q3 -> triangle_across_e2 = C;
+                else if (edge == 3)
+                    Q3 -> triangle_across_e3 = C;
+
+                edge = WhatEdge(p4, p1, Q4);                //Fix Triangle Across for Q4
+                if (edge == 1)
+                    Q4 -> triangle_across_e1 = D;
+                else if (edge == 2)
+                    Q4 -> triangle_across_e2 = D;
+                else if (edge == 3)
+                    Q4 -> triangle_across_e3 = D;
+
+                delete [] p1;
+                delete [] p2;
+                delete [] p3;
+                delete [] p4;
+                delete [] p5;
+
                 return;
             }
             else if (isCollinear(x1, y1, triangles[i].p3[0], triangles[i].p3[1], triangles[i].p2[0], triangles[i].p2[1])) { //SIDE 2 
                 //printf("Collinear Points\n");
                 //printf("Collinear Points on side 2: %d\n", i);
+               
+                return;
+
+                OneTriangle tri_B, tri_C;
+                OneTriangle *Q1, *Q2, *Q3, *Q4, *A, *B, *C, *D;
+                int edge, edge_Do;
+                float *p1 = new float[2];
+                float *p2 = new float[2];
+                float *p3 = new float[2];
+                float *p4 = new float[2];
+                float *p5 = new float[2];
+
+
+                A = &(triangles[i]);
+                D = A -> triangle_across_e2;
+
+                edge_Do = WhatEdge(A -> p2, A -> p3, D);
+
+                
+                
+                memcpy(p1, A -> p1, sizeof(float) * 2);
+                memcpy(p2, A -> p2, sizeof(float) * 2);
+                memcpy(p3, A -> p3, sizeof(float) * 2);
+                
+                p5[0] = x1;
+                p5[1] = y1;
+
+
+                Q1 = A -> triangle_across_e1;
+                Q2 = A -> triangle_across_e3;
+               
+                //Do edge specific assignment
+                if (edge_Do == 1) {
+                    Q3 = D -> triangle_across_e3;
+                    Q4 = D -> triangle_across_e2;
+
+                    memcpy(p4, D -> p3, sizeof(float) * 2);
+                }
+                else if (edge_Do == 2) {
+                    Q3 = D -> triangle_across_e1;
+                    Q4 = D -> triangle_across_e3;
+
+                    memcpy(p4, D -> p1, sizeof(float) * 2);
+                }
+                else if (edge_Do == 3) {
+                    Q3 = D -> triangle_across_e2;
+                    Q4 = D -> triangle_across_e1;
+
+                    memcpy(p4, D -> p2, sizeof(float) * 2);
+                }
+                else {
+                    printf("Something went wrong, you called what edge on either NULL Triangle or one that is not adjacent\n");
+                }
+                
+                memcpy(A -> p1, p1, sizeof(float) * 2);
+                memcpy(A -> p2, p2, sizeof(float) * 2);
+                memcpy(A -> p3, p5, sizeof(float) * 2);
+
+                memcpy(tri_B.p1, p1, sizeof(float) * 2);
+                memcpy(tri_B.p2, p5, sizeof(float) * 2);
+                memcpy(tri_B.p3, p3, sizeof(float) * 2);
+
+                memcpy(tri_C.p1, p5, sizeof(float) * 2);
+                memcpy(tri_C.p2, p4, sizeof(float) * 2);
+                memcpy(tri_C.p3, p3, sizeof(float) * 2);
+
+                memcpy(D -> p1, p2, sizeof(float) * 2);
+                memcpy(D -> p2, p4, sizeof(float) * 2);
+                memcpy(D -> p3, p5, sizeof(float) * 2);
+               
+                triangles.emplace_back(tri_B);
+                triangles.emplace_back(tri_C);
+                
+                int index = triangles.size() - 1;
+                B = &(triangles[index - 1]);
+                C = &(triangles[index]);
+
+                A -> triangle_across_e1 = Q1;
+                A -> triangle_across_e2 = D;
+                A -> triangle_across_e3 = B;
+
+                B -> triangle_across_e1 = A;
+                B -> triangle_across_e2 = C;
+                B -> triangle_across_e3 = Q2;
+                
+                C -> triangle_across_e1 = D;
+                C -> triangle_across_e2 = Q3;
+                C -> triangle_across_e3 = B;
+                
+                D -> triangle_across_e1 = Q4;
+                D -> triangle_across_e2 = C;
+                D -> triangle_across_e3 = A;
+
+                edge = WhatEdge(p1, p2, Q1);                //Fix Triangle Across for Q1
+                if (edge == 1)
+                    Q1 -> triangle_across_e1 = A;
+                else if (edge == 2)
+                    Q1 -> triangle_across_e2 = A;
+                else if (edge == 3)
+                    Q1 -> triangle_across_e3 = A;
+
+
+                edge = WhatEdge(p1, p3, Q2);                //Fix Triangle Across for Q2
+                if (edge == 1)
+                    Q2 -> triangle_across_e1 = B;
+                else if (edge == 2)
+                    Q2 -> triangle_across_e2 = B;
+                else if (edge == 3)
+                    Q2 -> triangle_across_e3 = B;
+
+                edge = WhatEdge(p3, p4, Q3);                //Fix Triangle Across for Q3
+                if (edge == 1)
+                    Q3 -> triangle_across_e1 = C;
+                else if (edge == 2)
+                    Q3 -> triangle_across_e2 = C;
+                else if (edge == 3)
+                    Q3 -> triangle_across_e3 = C;
+
+                edge = WhatEdge(p4, p2, Q4);                //Fix Triangle Across for Q4
+                if (edge == 1)
+                    Q4 -> triangle_across_e1 = D;
+                else if (edge == 2)
+                    Q4 -> triangle_across_e2 = D;
+                else if (edge == 3)
+                    Q4 -> triangle_across_e3 = D;
+
+                delete [] p1;
+                delete [] p2;
+                delete [] p3;
+                delete [] p4;
+                delete [] p5;
+
                 return;
             }
             else if (isCollinear(x1, y1, triangles[i].p1[0], triangles[i].p1[1], triangles[i].p3[0], triangles[i].p3[1])) { //SIDE 3
                 //printf("Collinear Points\n");
                 //printf("Collinear Points on side 3: %d\n", i);
-                
+               
+                return;
                 
                 OneTriangle tri_B, tri_C;
                 OneTriangle *Q1, *Q2, *Q3, *Q4, *A, *B, *C, *D;
@@ -639,7 +902,6 @@ DelaunayTriangulation::AddPoint(float x1, float y1)
                 A = &(triangles[i]);
                 D = A -> triangle_across_e3;
 
-                edge;
                 edge_Do = WhatEdge(A -> p1, A -> p3, D);
 
                 
@@ -1166,7 +1428,7 @@ DelaunayTriangulation::FindBoundingBox(float *points)
 bool
 DelaunayTriangulation::isCollinear(float x1, float y1, float x2, float y2, float x3, float y3) 
 {
-    double EPSILON = 0.0001;
+    double EPSILON = 0.0001f;
     double slope_dif = (y2 - y1) / (x2 - x1) - ((y3 - y2) / (x3 - x2));
     return (fabs(slope_dif) < EPSILON);
 }
