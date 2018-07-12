@@ -418,7 +418,7 @@ static void end_line(void)
     if (!useBinary)
     {
         char str2[8] = "\n";
-        fprintf(fp, str2);
+        fprintf(fp, "%s", str2);
         numInColumn = 0;
     }
 }
@@ -523,7 +523,7 @@ static void force_big_endian(unsigned char *bytes)
  
 static void write_string(const char *str)
 {
-    fprintf(fp, str);
+    fprintf(fp, "%s", str);
 }
  
  
@@ -570,11 +570,11 @@ static void write_int(int val)
     {
         char str[128];
         sprintf(str, "%d ", val);
-        fprintf(fp, str);
+        fprintf(fp, "%s", str);
         if (((numInColumn++) % 9) == 8)
         {
             char str2[8] = "\n";
-            fprintf(fp, str2);
+            fprintf(fp, "%s", str2);
             numInColumn = 0;
         }
     }
@@ -609,7 +609,7 @@ static void write_float(float val)
     {
         char str[128];
         sprintf(str, "%20.12e ", val);
-        fprintf(fp, str);
+        fprintf(fp, "%s", str);
         if (((numInColumn++) % 9) == 8)
         {
             end_line();
