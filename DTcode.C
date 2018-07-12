@@ -942,7 +942,7 @@ void   DelaunayTriangulation::VerifyMeetDC()
 
 int main()
 {
-    //float *pts = PointsGenerator(NUM_POINTS, 2);
+    float *pts = PointsGenerator(NUM_POINTS, 2);
     DelaunayTriangulation DT;
     
     //Declare timers
