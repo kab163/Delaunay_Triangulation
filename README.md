@@ -3,9 +3,9 @@ DT code, algorithms, research, etc. for KB
 
 This folder contains all the files related to the C code implementation of the Delaunay Triangulation.
 
-kristi.vtk: Do not modify this file. This is the output file that is generated. This is a file that you can open up with visit. It just shows the current triangulation and is a way to check your work.
+kristi.vtk: Shouldn't need to modify this file. This is the output file that is generated. This is a file that you can open up with visit. It just shows the current triangulation and is a way to check your work.
 
-visit_writer.c: Do not modify this file. This is necessary for the function which outputs the file above.
+visit_writer.c: Shouldn't need to modify this file. This is necessary for the function which outputs the file above.
 
 DTcode.C: This is the version of the DT code file that should be modified. It can be compiled with g++ (may have to use the "-std=c++11" flag), but make sure the above file is present in the same folder or you will get a compilation error. 
 
@@ -13,8 +13,10 @@ DelTInput.C: This is a version of the latest DT code that now has input file rea
 
 input.txt: A sample input file. Currently, this input file holds the x-y coordinates of the 48 US capitals (doesn't include Hawaii or Alaska). This input file is usually used for the Traveling Salesman Problem.
 
+Makefile: a simple makefile with the commands to run DTcode.C
+
 To compile:
-g++ DTcode.C
+make (assuming the makefile above is there)
 
 To run:
 ./a.out      (or whatever executable name you give it)
