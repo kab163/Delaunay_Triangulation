@@ -7,7 +7,8 @@
 #include <sys/time.h>
 #include <random>
 
-#define NUM_POINTS 20000
+#define NUM_POINTS 50000
+
 using std::vector;
 using std::cerr;
 using std::endl;
@@ -32,6 +33,7 @@ float *
 PointsGenerator(int numPoints, int dim = 2)
 {
     float *array = new float[numPoints*dim];
+    float rand_value;
     for (int i = 0 ; i < numPoints ; i++)
     {
         for (int j = 0 ; j < dim ; j++)
@@ -53,9 +55,13 @@ bool IsOnSameSide(float *endPoint1, float *endPoint2,
     // need to solve equation y = mx + b for endPoint1 
     // and endPoint2.
 
-    if (endPoint1[0] == endPoint2[0])
+   if (endPoint1[0] == endPoint2[0])
     {
         // infinite slope ... fail
+        if ((referencePoint[0] < endPoint1[0]) && (newPoint[0] < endPoint1[0]))
+            return true;
+        if ((referencePoint[0] > endPoint1[0]) && (newPoint[0] > endPoint1[0]))
+            return true;
         return false;
     }
     m = (endPoint2[1] - endPoint1[1])/(endPoint2[0] - endPoint1[0]);
@@ -73,6 +79,7 @@ bool IsOnSameSide(float *endPoint1, float *endPoint2,
 
     float product = val1*val2;
     return (product < 0 ? false : true);
+
 }
 
 class OneTriangle
@@ -110,6 +117,7 @@ class OneTriangle
 bool
 OneTriangle::ContainsPoint(float x, float y)
 {
+/*
     float p4[2];
     p4[0] = x;
     p4[1] = y;
@@ -117,6 +125,15 @@ OneTriangle::ContainsPoint(float x, float y)
     bool p1_and_p4 = IsOnSameSide(p3, p2, p1, p4);
     bool p2_and_p4 = IsOnSameSide(p3, p1, p2, p4);
     if (p3_and_p4 && p1_and_p4 && p2_and_p4)
+        return true;
+    return false;
+*/
+    float area = 0.5 * (-p2[1]*p3[0] + p1[1]*(-p2[0] + p3[0]) + p1[0]*(p2[1] - p3[1]) + p2[0]*p3[1]);
+    float s = 1/(2*area)*(p1[1]*p3[0] - (p1[0]*p3[1]) + (p3[1]-p1[1])*x + (p1[0] - p3[0])*y);
+    float t = 1/(2*area)*(p1[0]*p2[1] - (p1[1]*p2[0]) + (p1[1]-p2[1])*x + (p2[0] - p1[0])*y);
+    float epsilon = 0.0f;
+    
+    if (((1.0 - s - t) >= epsilon) && (s >= epsilon) && (t >= epsilon))
         return true;
     return false;
 }
@@ -146,6 +163,7 @@ class DelaunayTriangulation
     
 };
 
+
 void DelaunayTriangulation::Verify()
 {
     int ncells = triangles.size();
@@ -154,11 +172,32 @@ void DelaunayTriangulation::Verify()
     int numTrianglesFlipped = 0;
     bool done = false;
     FILE *flipLog = fopen("flip.log", "w");     //Create file for logging flips per iteration
+//    int numTriangles = triangles.size();
+//    float * outsideVectors;
+//    float * insideVectors = new float[4];
 
     while (!done) {
         numTrianglesFlipped = 0;
         for (int j = 0; j < ncells; j++) {   
             if (triangles[j].ta_e1 != NULL) {
+                /*
+                insideVectors[0] = triangles[i].p1[0] - triangles[i].p3[0];
+                insideVectors[1] = triangles[i].p1[1] - triangles[i].p3[1];
+                insideVectors[2] = triangles[i].p2[0] - triangles[i].p3[0];
+                insideVectors[3] = triangles[i].p2[1] - triangles[i].p3[1];
+                int outEdge = WhatEdge(triangles[i].p1, triangles[i].p2, triangles[i].ta_e1);
+                outsideVectors = FindVectors(outEdge, triangles[i].ta_e1);
+                if (SumAngles(insideVectors, outsideVectors)) {
+                    if (outEdge == 1)
+                        EdgeFlip(i,triangles[i].ta_e1->p3, 1);
+                    else if (outEdge == 2)
+                        EdgeFlip(i,triangles[i].ta_e1->p1, 1);
+                    else if (outEdge == 3)
+                        EdgeFlip(i,triangles[i].ta_e1->p2, 1);
+                    numTrianglesFlipped++; 
+                }
+            }
+            */
                 if (AltCircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].ta_e1->p2)) {
                     numTrianglesFlipped++; 
                     EdgeFlip(j,triangles[j].ta_e1->p2, 1);
@@ -171,9 +210,27 @@ void DelaunayTriangulation::Verify()
                     numTrianglesFlipped++; 
                     EdgeFlip(j,triangles[j].ta_e1->p3, 1);
                 }
-            }
+            }           
 
             if (triangles[j].ta_e2 != NULL) {
+                /*
+                insideVectors[0] = triangles[i].p2[0] - triangles[i].p1[0];
+                insideVectors[1] = triangles[i].p2[1] - triangles[i].p1[1];
+                insideVectors[2] = triangles[i].p3[0] - triangles[i].p1[0];
+                insideVectors[3] = triangles[i].p3[1] - triangles[i].p1[1];
+                int outEdge = WhatEdge(triangles[i].p2, triangles[i].p3, triangles[i].ta_e2);
+                outsideVectors = FindVectors(outEdge, triangles[i].ta_e2);
+                if (SumAngles(insideVectors, outsideVectors)) {
+                    if (outEdge == 1)
+                        EdgeFlip(i,triangles[i].ta_e2->p3, 2);
+                    if (outEdge == 2)
+                        EdgeFlip(i,triangles[i].ta_e2->p1, 2);
+                    if (outEdge == 3)
+                        EdgeFlip(i,triangles[i].ta_e2->p2, 2);
+                    numTrianglesFlipped++;
+                }
+            }
+            */
                 if (AltCircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].ta_e2->p1)) { 
                     numTrianglesFlipped++;
                     EdgeFlip(j,triangles[j].ta_e2->p1, 2);
@@ -186,10 +243,27 @@ void DelaunayTriangulation::Verify()
                     numTrianglesFlipped++;
                     EdgeFlip(j,triangles[j].ta_e2->p3, 2);
                 }
-            } 
-
+            }
             if (triangles[j].ta_e3 != NULL) {
-                if(AltCircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].ta_e3->p3)) { 
+                /*
+                insideVectors[0] = triangles[i].p1[0] - triangles[i].p2[0];
+                insideVectors[1] = triangles[i].p1[1] - triangles[i].p2[1];
+                insideVectors[2] = triangles[i].p3[0] - triangles[i].p2[0];
+                insideVectors[3] = triangles[i].p3[1] - triangles[i].p2[1];
+                int outEdge = WhatEdge(triangles[i].p3, triangles[i].p1, triangles[i].ta_e3);
+                outsideVectors = FindVectors(outEdge, triangles[i].ta_e3);
+                if (SumAngles(insideVectors, outsideVectors)) {
+                    if (outEdge == 1)
+                        EdgeFlip(i, triangles[i].ta_e3->p3, 3);
+                    if (outEdge == 2)
+                        EdgeFlip(i, triangles[i].ta_e3->p1, 3);
+                    if (outEdge == 3)
+                        EdgeFlip(i, triangles[i].ta_e3->p2, 3);
+                    numTrianglesFlipped++;
+                }
+            }
+            */
+               if(AltCircumcircleCheck(triangles[j].p1, triangles[j].p2, triangles[j].p3, triangles[j].ta_e3->p3)) { 
                     numTrianglesFlipped++;
                     EdgeFlip(j, triangles[j].ta_e3->p3, 3);
                 }
@@ -201,19 +275,24 @@ void DelaunayTriangulation::Verify()
                     numTrianglesFlipped++;
                     EdgeFlip(j, triangles[j].ta_e3->p1, 3);
                 }
+                else
+
             }
+        fprintf(flipLog, "overalliteration: %d\tnumtriflip: %d\tindex of flip%d\n", iteration, numTrianglesFlipped, j);
         }
 
-        fprintf(flipLog, "%d\t%d\n", iteration, numTrianglesFlipped);
 
         totalFlips += numTrianglesFlipped;
         done = (numTrianglesFlipped == 0 ? true : false);
         iteration++;
+        cerr << "finished full loop of verify - numtriflipped: " << numTrianglesFlipped << endl;
     }
 
     printf("Iteration count: %d\n", iteration);
     printf("Total flips: %d\n", totalFlips);
     fclose(flipLog);
+    //delete [] outsideVectors;
+    //delete [] insideVectors;
 }
 
 void DelaunayTriangulation::DelBoundingTri(float *bounding_tri) 
@@ -362,7 +441,6 @@ void DelaunayTriangulation::EdgeFlip(int j, float* p4_og, int edge)
         else if (edge == 3)
             triangles[j].ta_e2 -> ta_e2 -> ta_e3 = triangles[j].ta_e2;
     } 
-    
     else if (edge == 2) {
         edge = WhatEdge(triangles[j].p2, triangles[j].p3, triangles[j].ta_e2);
             new_edge = ( ( (edge % 3) + 1) % 3 ) + 1;
@@ -640,39 +718,39 @@ DelaunayTriangulation::AddPoint(float x1, float y1)
             T3->ta_e3 = T2;
             if (TA != NULL) {
                 int edge = WhatEdge(original_triangle.p1, original_triangle.p2, TA);
-                if (edge == 1) {
+                if (edge == 1)
                     TA->ta_e1 = T1;
-                }
-                else if (edge == 2) {
-                    TA->ta_e2 = T1;
-                }
-                else if (edge == 3) {
-                    TA->ta_e3 = T1;
-                }
-            }
-            if (TB != NULL) {
-                int edge = WhatEdge(original_triangle.p1, original_triangle.p3, TB);
-                if (edge == 1) {
-                    TB->ta_e1 = T2;
-                }
-                else if (edge == 2) {
-                    TB->ta_e2 = T2;
-                }
-                else if (edge == 3) {
+                else if (edge == 2) 
+                    TA->ta_e2 = T1; else if (edge == 3) TA->ta_e3 = T1; } if (TB != NULL) { int edge = WhatEdge(original_triangle.p1, original_triangle.p3, TB); if (edge == 1) TB->ta_e1 = T2; else if (edge == 2) TB->ta_e2 = T2; else if (edge == 3)
                     TB->ta_e3 = T2;
-                }
+
             }
             if (TC != NULL) {
                 int edge = WhatEdge(original_triangle.p2, original_triangle.p3, TC);
-                if (edge == 1) {
+                if (edge == 1)
                     TC->ta_e1 = T3;
-                }
-                else if (edge == 2) {
+                else if (edge == 2)
                     TC->ta_e2 = T3;
-                }
-                else if (edge == 3) {
+                else if (edge == 3)
                     TC->ta_e3 = T3;
-                }
+
+            }
+            // colinearity check
+            float epsilon = 0.0000001f;
+            float area1 = fabs(T1->p1[0] * (T1->p2[1] - T1->p3[1]) + T1->p2[0] * (T1->p3[1] - T1->p1[1]) + T1->p3[0] * (T1->p1[1] - T1->p2[1]) / 2);
+            if (area1 < epsilon) {
+                cerr << "triangle has zero area! (collinear point) index: " << i << endl;
+                PrintTri(T1);
+            }
+            float area2 = fabs(T2->p1[0] * (T2->p2[1] - T2->p3[1]) + T2->p2[0] * (T2->p3[1] - T2->p1[1]) + T2->p3[0] * (T2->p1[1] - T2->p2[1]) / 2);
+            if (area2 < epsilon) {
+                cerr << "triangle has zero area! (collinear point) index: " << index << endl;
+                PrintTri(T2);
+            }
+            float area3 = fabs(T3->p1[0] * (T3->p2[1] - T3->p3[1]) + T3->p2[0] * (T3->p3[1] - T3->p1[1]) + T3->p3[0] * (T3->p1[1] - T3->p2[1]) / 2);
+            if (area3 < epsilon) {
+                cerr << "triangle has zero area! (collinear point) index: " << (index + 1) << endl;
+                PrintTri(T3);
             }
             return;
         }
@@ -713,18 +791,18 @@ DelaunayTriangulation::AltCircumcircleCheck(float *ptA, float *ptB, float *ptC, 
     float cx_ = ptC[0]-ptD[0];
     float cy_ = ptC[1]-ptD[1];
 
-    //This calculates radius of circumcircle defined by A, B, C
-    float a = sqrt( pow(ptA[0] - ptB[0], 2) + pow(ptA[1] - ptB[1], 2) );
-    float b = sqrt( pow(ptB[0] - ptC[0], 2) + pow(ptB[1] - ptC[1], 2) );
-    float c = sqrt( pow(ptC[0] - ptA[0], 2) + pow(ptC[1] - ptA[1], 2) );
-    
-    float radius = a * b * c;
-    radius /= sqrt( (a+b+c) * (b+c-a) * (c+a-b) * (a+b-c));
+    float result = ((ax_*ax_ + ay_*ay_) * (bx_*cy_ - cx_*by_) -
+                    (bx_*bx_ + by_*by_) * (ax_*cy_ - cx_*ay_) +
+                    (cx_*cx_ + cy_*cy_) * (ax_*by_ - bx_*ay_));
 
-    float result = ((ax_ * ax_ + ay_ * ay_) * (bx_ * cy_ - cx_ * by_) -
-                    (bx_ * bx_ + by_ * by_) * (ax_ * cy_ - cx_ * ay_) +
-                    (cx_ * cx_ + cy_ * cy_) * (ax_ * by_ - bx_ * ay_));
+    if (result != result) {
+        cerr << "RESULT IS NAN! val: " << result << endl;
+    }
+    if (result > 99999999999999.0) {
+        cerr << "RESULT IS GREATER THAN ALLOWED - val: " << result << endl;
+    }
     
+
     return result > 0;
 }
 
@@ -735,29 +813,22 @@ DelaunayTriangulation::WhatEdge(float *pt1, float *pt2, OneTriangle *tri)
     int total = 0;
     float EPSILON = 0.000001f;
 
-    if (tri == NULL) { //Triangle Pointer was NULL, happens for triangles around perimeter
+    if (tri == NULL) //Triangle Pointer was NULL, happens for triangles around perimeter
         return 0;
-    }
 
-    if ((fabs(pt1[0] - tri->p1[0]) < EPSILON && fabs(pt1[1] - tri->p1[1]) < EPSILON) || (fabs(pt2[0] - tri->p1[0]) < EPSILON && fabs(pt2[1] - tri->p1[1]) < EPSILON)) {
+    if ((fabs(pt1[0] - tri->p1[0]) < EPSILON && fabs(pt1[1] - tri->p1[1]) < EPSILON) || (fabs(pt2[0] - tri->p1[0]) < EPSILON && fabs(pt2[1] - tri->p1[1]) < EPSILON))
         total += 1;
-    }
-    if ((fabs(pt1[0] - tri->p2[0]) < EPSILON && fabs(pt1[1] - tri->p2[1]) < EPSILON) || (fabs(pt2[0] - tri->p2[0]) < EPSILON && fabs(pt2[1] - tri->p2[1]) < EPSILON)) {
+    if ((fabs(pt1[0] - tri->p2[0]) < EPSILON && fabs(pt1[1] - tri->p2[1]) < EPSILON) || (fabs(pt2[0] - tri->p2[0]) < EPSILON && fabs(pt2[1] - tri->p2[1]) < EPSILON))
         total += 2;
-    }
-    if ((fabs(pt1[0] - tri->p3[0]) < EPSILON && fabs(pt1[1] - tri->p3[1]) < EPSILON) || (fabs(pt2[0] - tri->p3[0]) < EPSILON && fabs(pt2[1] - tri->p3[1]) < EPSILON)) {
+    if ((fabs(pt1[0] - tri->p3[0]) < EPSILON && fabs(pt1[1] - tri->p3[1]) < EPSILON) || (fabs(pt2[0] - tri->p3[0]) < EPSILON && fabs(pt2[1] - tri->p3[1]) < EPSILON))
         total += 3;
-    }
 
-    if (total == 3) {        //Points 1 and 2
+    if (total == 3)        //Points 1 and 2
         return 1;
-    }
-    else if (total == 4) {   //Points 1 and 3
+    else if (total == 4)   //Points 1 and 3
         return 3;
-    }
-    else if (total == 5) {   //Points 2 and 3
+    else if (total == 5)   //Points 2 and 3
         return 2;
-    }
     else {                   //Not in Triangle, Shouldn't return this, function should not be called on non adjacent triangles
         printf("Triangle didn't have the point\n");
         printf("%f\t%f\n", pt1[0], pt1[1]);
@@ -798,18 +869,15 @@ DelaunayTriangulation::FindBoundingBox(float *points)
     float y_max = 0.0f;
 
     for (int i = 0; i < NUM_POINTS; i++) {
-        if (points[2 * i] < x_min) {
+        if (points[2 * i] < x_min)
             x_min = points[2 * i];
-        }
-        if (points[2 * i] > x_max) {
+        if (points[2 * i] > x_max)
             x_max = points[2 * i];
-        }
-        if (points[2 * i + 1] < y_min) {
+        if (points[2 * i + 1] < y_min)
             y_min = points[2 * i + 1];
-        }
-        if (points[2 * i + 1] > y_max) {
+        if (points[2 * i + 1] > y_max)
             y_max = points[2 * i + 1];
-        }
+    
     }
 
     /*
@@ -869,12 +937,12 @@ bool   DelaunayTriangulation::SumAngles(float * insideV, float * outsideV)
     m2 = sqrt((outsideV[2] * outsideV[2]) + (outsideV[3] * outsideV[3]));
     float outsideRadians = acos((outsideV[0]*outsideV[2] + outsideV[1] * outsideV[3]) / (m1 * m2) );
     if ((insideRadians + outsideRadians) > 3.14159265359) { 
-        cerr << "---------\nsum over 180 degrees: " << (insideRadians + outsideRadians) * (180.0/3.14159) << endl;
+        /*cerr << "---------\nsum over 180 degrees: " << (insideRadians + outsideRadians) * (180.0/3.14159) << endl;
         cerr << "inside degree: " << (insideRadians * (180.0/3.14159)) << "\toutside degree: " << (outsideRadians * (180.0/3.14159)) << endl;
         cerr << "\ninside: \tvector1 (" << insideV[0] << ", " << insideV[1] << ")";
         cerr << "\tvector2 (" << insideV[2] << ", " << insideV[3] << ")" << endl;
         cerr << "outside:\tvector1 (" << outsideV[0] << ", " << outsideV[1] << ")";
-        cerr << "\tvector2 (" << outsideV[2] << ", " << outsideV[3] << ")" << endl;
+        cerr << "\tvector2 (" << outsideV[2] << ", " << outsideV[3] << ")" << endl;*/
         return true;
     }
     else 
@@ -940,9 +1008,38 @@ void   DelaunayTriangulation::VerifyMeetDC()
     delete [] insideVectors;
 }
 
+float *
+HanksPointGenerator(int num_points, int dim = 2)
+{
+    int one_side = sqrt(num_points);
+    if (one_side * one_side != num_points)
+    {
+        printf("This routine can only take perfect squares.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    float *points_list = new float[2*num_points];
+     
+    for (int i = 0 ; i < one_side ; i++)
+        for (int j = 0 ; j < one_side ; j++)
+        {
+            int index = i*one_side + j;
+            //points_list[2*index]   = i/((float) one_side);
+            //points_list[2*index+1] = j/((float) one_side);
+            points_list[2*index]   = i/2.0;
+            points_list[2*index+1] = j/2.0;
+        }
+
+    //points_list[18] = 0.5;
+    //points_list[19] = 0.5;
+
+    return points_list;
+}
+
 int main()
 {
     float *pts = PointsGenerator(NUM_POINTS, 2);
+    //float *pts = HanksPointGenerator(NUM_POINTS, 2);
     DelaunayTriangulation DT;
     
     //Declare timers
