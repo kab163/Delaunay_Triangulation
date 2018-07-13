@@ -12,7 +12,7 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-#define NUM_POINTS 500000
+#define NUM_POINTS 200000
 
 
 // OUR CONVENTION
@@ -30,21 +30,16 @@ using std::endl;
 // (and the picture could be flipped, rotated, etc.)
 //
 
-//DO NOT EDIT THIS FUNCTION
 double * 
 PointsGenerator(int numPoints, int dim = 2)
 {
     double *array = new double[numPoints*dim];
     srand(time(NULL));   //USE THIS LINE TO SEED RAND
-    std::default_random_engine generator;
-    std::normal_distribution<double> distribution(0.5,0.6);
     for (int i = 0 ; i < numPoints ; i++)
     {
         for (int j = 0 ; j < dim ; j++)
         {
             double rand_value = rand() % 1000000 / 1000000.0;
-            //double rand_value = rand() + rand() * 10 + rand() * 100 + rand() * 1000;
-            //double rand_value = rand() % 1000000 / 100000.0 * distribution(generator);     //Point generation a la John.
             array[dim*i+j] = rand_value;
         }
     }
@@ -66,8 +61,6 @@ bool IsOnSameSide(double *endPoint1, double *endPoint2,
 
     if (endPoint1[0] == endPoint2[0])
     {
-        // infinite slope ... fail
-        
         if ((endPoint1[0] < referencePoint[0]) && (endPoint1[0] < newPoint[0]))
             return true;
         if ((endPoint1[0] > referencePoint[0]) && (endPoint1[0] > newPoint[0]))
@@ -129,21 +122,13 @@ class OneTriangle
     }
 };
 
-//DO NOT EDIT THIS FUNCTION
 bool
 OneTriangle::ContainsPoint(double x, double y)
 {
     double p4[2];
     p4[0] = x;
     p4[1] = y;
-    /*
-    bool p3_and_p4 = IsOnSameSide(p1, p2, p3, p4);
-    bool p1_and_p4 = IsOnSameSide(p3, p2, p1, p4);
-    bool p2_and_p4 = IsOnSameSide(p3, p1, p2, p4);
-    if (p3_and_p4 && p1_and_p4 && p2_and_p4)
-        return true;
-    return false;
-    */
+    
     bool b1 = sign(p4, p1, p2) < 0.0f;
     bool b2 = sign(p4, p2, p3) < 0.0f;
     bool b3 = sign(p4, p3, p1) < 0.0f;
@@ -167,7 +152,6 @@ class DelaunayTriangulation
     int    WhatEdge(double *, double *, OneTriangle *);
     void   PrintTri(OneTriangle *);
     double *FindBoundingBox(double *);
-    void   EliminateCollinearity(double *);
     bool   isCollinear(double, double, double, double, double, double);
 
   private:
@@ -630,9 +614,6 @@ DelaunayTriangulation::AddPoint(double x1, double y1)
                 return;
             }
             else if (isCollinear(x1, y1, triangles[i].p1[0], triangles[i].p1[1], triangles[i].p2[0], triangles[i].p2[1])) { //SIDE 1
-                //printf("Collinear Points\n");
-                printf("Collinear Points on side 1: %d\n", i);
-                //return;
                 
                 OneTriangle tri_B, tri_C;
                 OneTriangle *Q1, *Q2, *Q3, *Q4, *A, *B, *C, *D;
@@ -763,20 +744,9 @@ DelaunayTriangulation::AddPoint(double x1, double y1)
                 delete [] p4;
                 delete [] p5;
 
-                //Debugging help start
-                PrintTri(A);
-                PrintTri(B);
-                PrintTri(C);
-                PrintTri(D);
-                //DB end
-                
                 return;
             }
             else if (isCollinear(x1, y1, triangles[i].p3[0], triangles[i].p3[1], triangles[i].p2[0], triangles[i].p2[1])) { //SIDE 2 
-                //printf("Collinear Points\n");
-                printf("Collinear Points on side 2: %d\n", i);
-               
-                //return;
 
                 OneTriangle tri_B, tri_C;
                 OneTriangle *Q1, *Q2, *Q3, *Q4, *A, *B, *C, *D;
@@ -907,20 +877,9 @@ DelaunayTriangulation::AddPoint(double x1, double y1)
                 delete [] p4;
                 delete [] p5;
                 
-                //Debugging help start
-                PrintTri(A);
-                PrintTri(B);
-                PrintTri(C);
-                PrintTri(D);
-                //DB end
-
                 return;
             }
             else if (isCollinear(x1, y1, triangles[i].p1[0], triangles[i].p1[1], triangles[i].p3[0], triangles[i].p3[1])) { //SIDE 3
-                //printf("Collinear Points\n");
-                printf("Collinear Points on side 3: %d\n", i);
-               
-                //return;
                 
                 OneTriangle tri_B, tri_C;
                 OneTriangle *Q1, *Q2, *Q3, *Q4, *A, *B, *C, *D;
@@ -1050,13 +1009,6 @@ DelaunayTriangulation::AddPoint(double x1, double y1)
                 delete [] p3;
                 delete [] p4;
                 delete [] p5;
-
-                //Debugging help start
-                PrintTri(A);
-                PrintTri(B);
-                PrintTri(C);
-                PrintTri(D);
-                //DB end
 
                 return;
             }
@@ -1220,25 +1172,6 @@ DelaunayTriangulation::AltCircumcircleCheck(double *ptA, double *ptB, double *pt
     double cx_ = ptC[0]-ptD[0];
     double cy_ = ptC[1]-ptD[1];
 
-    //This calculates radius of circumcircle defined by A, B, C
-    double a = sqrt( pow(ptA[0] - ptB[0], 2) + pow(ptA[1] - ptB[1], 2) );
-    double b = sqrt( pow(ptB[0] - ptC[0], 2) + pow(ptB[1] - ptC[1], 2) );
-    double c = sqrt( pow(ptC[0] - ptA[0], 2) + pow(ptC[1] - ptA[1], 2) );
-    
-    //double radius = a * b * c;
-    //radius /= sqrt( (a+b+c) * (b+c-a) * (c+a-b) * (a+b-c));
-
-    //if (isnan(radius)) {
-        //printf("NOT A NUMBER\n");
-        //return true;
-        //return false;
-    //}
-    //if (isinf(radius)) {
-        //printf("Infinity\n");
-        //return true;
-    //}
-    //End radius calc
-    //
 
     double ccw = (ptB[0] - ptA[0]) * (ptC[1] - ptA[1]) - (ptC[0] - ptA[0]) * (ptB[1] - ptA[1]);
     if (ccw <= 0.0f) {
@@ -1251,7 +1184,6 @@ DelaunayTriangulation::AltCircumcircleCheck(double *ptA, double *ptB, double *pt
     double result = ((ax_ * ax_ + ay_ * ay_) * (bx_ * cy_ - cx_ * by_) -
                     (bx_ * bx_ + by_ * by_) * (ax_ * cy_ - cx_ * ay_) +
                     (cx_ * cx_ + cy_ * cy_) * (ax_ * by_ - bx_ * ay_));
-    //printf("%f\n", result);
     return result > 0;
 }
 
@@ -1285,12 +1217,7 @@ DelaunayTriangulation::WhatEdge(double *pt1, double *pt2, OneTriangle *tri)
     else if (total == 5) {   //Points 2 and 3
         return 2;
     }
-    else {                   //Not in Triangle, Shouldn't return this, function should not be called on non adjacent triangles
-        printf("Triangle didn't have the point\n");
-        printf("%f\t%f\n", pt1[0], pt1[1]);
-        printf("%f\t%f\n", pt2[0], pt2[1]);
-        PrintTri(tri);
-        //exit(1);
+    else {
         return 0;
     }
 }
@@ -1488,56 +1415,15 @@ DelaunayTriangulation::isCollinear(double x1, double y1, double x2, double y2, d
         printf("The slopes were infinite : %f\n", slope_dif);
         return true;
     }
-    //return slope_a == slope_b;
-
 
     return (fabs(slope_dif) < EPSILON);
 }
 
-//This method is not operating properly.  Do not use.
-void
-DelaunayTriangulation::EliminateCollinearity(double *pts) 
-{
-    int i, j, k, noiseApplied = 0;
-    double slope_dif, x1, y1, x2, y2, x3, y3;
-    for (i = 0; i < NUM_POINTS; i++) {
-        for (j = i; j < NUM_POINTS; j++) {
-            for (k = j; k < NUM_POINTS; k++) {
-                if (i != j && j != k && i != k) {
-                    x1 = pts[2 * i];
-                    x2 = pts[2 * j];
-                    x2 = pts[2 * k];
-                    y1 = pts[2 * i + 1];
-                    y2 = pts[2 * j + 1];
-                    y3 = pts[2 * k + 1];
-
-                    //area = x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2);
-                    slope_dif = (y2 - y1) / (x2 - x1) - ((y3 - y2) / (x3 - x2));
-                    if (fabs(slope_dif) < 0.0000000001) {
-                        /*
-                            printf("Points collinear\n");
-                            printf("%f\n", slope_dif);
-                            printf("%f\t%f\n", x1, y1);
-                            printf("%f\t%f\n", x2, y2);
-                            printf("%f\t%f\n", x3, y3);
-                            printf("**************************\n\n");
-                        */
-                        pts[2 * j] += rand() * 1000000 / 1000000.0;
-                        pts[2 * j + 1] += rand() * 1000000 / 1000000.0;
-                        noiseApplied++;
-                    }
-                }
-            }
-        }
-    }
-}
 
 int main()
 {
     double *pts = PointsGenerator(NUM_POINTS, 2);
     
-    //double *pts = new double[NUM_POINTS * 2];
-    //double pts_tmp[18] = {1.0f, 1.0f, 2.0f, 1.0f, 3.0f, 1.0f, 1.0f, 2.0f, 2.0f, 2.0f, 3.0f, 2.0f, 1.0f, 3.0f, 2.0f, 3.0f, 3.0f, 3.0f};
     //double pts_tmp[18] = {1.0f, 1.0f, 1.0f, 2.0f, 1.0f, 3.0f, 
     //                      2.0f, 1.0f, 2.0f, 2.0f, 2.0f, 3.0f, 
     //                      3.0f, 1.0f, 3.0f, 2.0f, 3.0f, 3.0f};
@@ -1560,8 +1446,10 @@ int main()
     //AddPoints to triangulation.  Produces and initial tesselation
     gettimeofday(&start, NULL);
     for (int i = 0 ; i < NUM_POINTS ; i++) {
-        //printf("%f\t%f\n", pts[2*i], pts[2*i+1]);
         DT.AddPoint(pts[2*i], pts[2*i+1]);
+        if (!(i % 10000) ){
+            printf("Currently adding point %.7d\n", i);
+        }
     }
     gettimeofday(&end, NULL);
     
