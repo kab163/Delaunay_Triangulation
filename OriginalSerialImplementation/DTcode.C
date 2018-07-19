@@ -12,7 +12,7 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-#define NUM_POINTS 200000
+#define NUM_POINTS 20000
 
 
 // OUR CONVENTION
@@ -168,7 +168,7 @@ void DelaunayTriangulation::Verify()
     int totalFlips = 0;
     int numTrianglesFlipped = 0;
     bool done = false;
-    FILE *flipLog = fopen("flip.log", "w");     //Create file for logging flips per iteration
+    FILE *flipLog = fopen("Logging/flip.log", "w");     //Create file for logging flips per iteration
 
     while (!done) {
         numTrianglesFlipped = 0;
@@ -1128,40 +1128,6 @@ DelaunayTriangulation::AddPoint(double x1, double y1)
     }
 }
 
-// Function to calculate the determinant of 3 points. This gives us the circumcircle of the triangle. If a 4th point is inside the triangle,
-// the result will be negative. If the 4th point lies outside the circle, result will be positive. A result equal to zero means that the 4th
-// point lies on the circle exactly. In this case, the DT of the set of points is not unique. It's like drawing two triangles in a square. 
-// Whether the 3rd point and the 0th point make up the hypotenous or the 2nd and the 1st point make up the hypotenus, it's equivalent and
-// therefore you could do either one and make a valid DT. Will need to call a seperate function to handle that case later. For now I return false,
-// meaning that I do not flip it and leave it as is...
-//
-// Inputs: 3 points, each with x and y coordinates (or z in case of 3D) and a 4th point with x and y coordinates. This makes up points A, B, C (of the
-// triangle) and the 4th point, D.
-// Output: Boolean value. True if 4th point is inside circle. This means we have to flip. False if 4th point is outside circle. This means we're ok.
-//
-// TODO: create another case where we call a function to handle if the result is equal to zero - for now, return false  
-bool 
-DelaunayTriangulation::CircumcircleCheck(double* ptA, double* ptB, double* ptC, double* ptD)
-{
-    double result = 0.0;
-
-    //find the Determinant
-    double Part1 = (ptB[1] - ptD[1]) * (DetHelp(ptC[0], ptD[0], ptC[1], ptD[1])) - (ptC[1] - ptD[1]) * (DetHelp(ptB[0], ptD[0], ptB[1], ptD[1]));
-    double Part2 = (ptB[0] - ptD[0]) * (DetHelp(ptC[0], ptD[0], ptC[1], ptD[1])) - (ptC[0] - ptD[0]) * (DetHelp(ptB[0], ptD[0], ptB[1], ptD[1]));
-    double Part3 = (ptB[0] - ptD[0]) * (ptC[1] - ptD[1]) - (ptC[0] - ptD[0]) * (ptB[1] - ptD[1]);
-
-    double A1 = (ptA[0] - ptD[0]) * Part1;
-    double A2 = (ptA[1] - ptD[1]) * Part2;
-    double A3 = DetHelp(ptA[0], ptD[0], ptA[1], ptD[1]) * Part3;
-
-    result = A1 - A2 + A3;
-
-    if (result < 0) return false; //ptD lies outside circumcircle
-    else if (result > 0) return true; //ptD lies inside circumcircle
-    else if (result == 0) return false; // ptD lies ON the circle, for now acting like it lies outside...
-    return false;
-}
-
 bool
 DelaunayTriangulation::AltCircumcircleCheck(double *ptA, double *ptB, double *ptC, double *ptD)
 {
@@ -1221,14 +1187,6 @@ DelaunayTriangulation::WhatEdge(double *pt1, double *pt2, OneTriangle *tri)
         return 0;
     }
 }
-
-//Helper function for CircumcirlceCheck function. This helps the readability of the code. Does a simple calculation on 4 values, returns result.
-double
-DelaunayTriangulation::DetHelp(double pt1, double pt2, double pt3, double pt4)
-{
-    return ((pow((pt1 - pt2), 2)) + (pow((pt3 - pt4), 2)));
-}
-
 
 //Function for debugging. Prints info about triangle pointed to by *t
 void
