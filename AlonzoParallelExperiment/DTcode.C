@@ -113,7 +113,7 @@ class DelaunayTriangulation
     bool   AltCircumcircleCheck(double*, double*, double*, double*);
     int    WhatEdge(double *, double *, OneTriangle *);
     void   PrintTri(OneTriangle *);
-    double *FindBoundingBox(double *);
+    double *FindBoundingBox(double *, int);
     bool   isCollinear(double, double, double, double, double, double);
 
   private:
@@ -1283,7 +1283,7 @@ void   DelaunayTriangulation::VerifyMeetDC()
 }
 
 double *
-DelaunayTriangulation::FindBoundingBox(double *points) 
+DelaunayTriangulation::FindBoundingBox(double *points, int num_points) 
 {
     double *bounding_box = new double[4];
     double x_min = 0.0f;
@@ -1293,7 +1293,7 @@ DelaunayTriangulation::FindBoundingBox(double *points)
 
     int i;
 
-    for (i = 0; i < NUM_POINTS; i++) {
+    for (i = 0; i < num_points; i++) {
         if (points[2 * i] < x_min) {
             x_min = points[2 * i];
         }
@@ -1357,11 +1357,38 @@ class ParallelDelaunayTriangulation
     Initialize(double *pts) 
     {
         this->pts = pts;
-        this->bounding_box = DT.FindBoundingBox(pts);
+        this->bounding_box = DT.FindBoundingBox(pts, NUM_POINTS);
         this->width = bounding_box[1] - bounding_box[0];
         this->height = bounding_box[3] - bounding_box[2];
         
         SortPoints();
+    }
+
+    void
+    AddAndVerify()
+    {
+        
+        int i = NUM_POINTS / 2, j;
+        double *bb, *bt;
+        
+        bb = DT1.FindBoundingBox(pts, i);
+        bt = DT1.Initialize(bb, i);
+        for (j = 0; j < i; j++) {
+             DT1.AddPoint(pts[2 * j], pts[2 * j + 1]);
+        }
+        DT1.Verify();
+        DT1.DelBoundingTri(bt);
+        DT1.VerifyMeetDC();
+        
+        
+        bb = DT2.FindBoundingBox(pts, NUM_POINTS - i);
+        bt = DT2.Initialize(bb, NUM_POINTS - i);
+        for (; j < NUM_POINTS; j++) {
+             DT2.AddPoint(pts[2 * j], pts[2 * j + 1]);
+        }
+        DT2.Verify();
+        DT2.DelBoundingTri(bt);
+        DT2.VerifyMeetDC();
     }
 
     void
@@ -1382,9 +1409,9 @@ class ParallelDelaunayTriangulation
             i++;
         }
         
-        for (i = 0; i < NUM_POINTS; i++) {
-            printf("%f\t%f\n", *(pts + 2 * i), *(pts + 2 * i + 1));
-        }
+        //for (i = 0; i < NUM_POINTS; i++) {
+        //    printf("%f\t%f\n", *(pts + 2 * i), *(pts + 2 * i + 1));
+        //}
     }
     bool
     compareGreater(double *p1, double *p2)
@@ -1421,8 +1448,9 @@ int main()
 
     PDT.Initialize(pts);
     printf("Finished Sorting\n");
+    PDT.AddAndVerify();
     
-    double *bounding_box = DT.FindBoundingBox(pts);
+    double *bounding_box = DT.FindBoundingBox(pts, NUM_POINTS);
     double *bounding_tri = DT.Initialize(bounding_box, NUM_POINTS);
     
 
@@ -1435,7 +1463,11 @@ int main()
     DT.VerifyMeetDC();
 
     char *filename = (char *)"kristi.vtk";
+    char *filename1 = (char *)"alonzoA.vtk";
+    char *filename2 = (char *)"alonzoB.vtk";
     DT.WriteOutTriangle(filename);
+    PDT.DT1.WriteOutTriangle(filename1);
+    PDT.DT2.WriteOutTriangle(filename2);
 
     delete [] pts;
     delete [] bounding_box;
