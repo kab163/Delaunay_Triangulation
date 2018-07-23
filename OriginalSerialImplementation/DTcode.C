@@ -47,44 +47,6 @@ PointsGenerator(int numPoints, int dim = 2)
     return array;
 }
 
-//DO NOT EDIT THIS FUNCTION
-bool IsOnSameSide(double *endPoint1, double *endPoint2, 
-                  double *referencePoint, double *newPoint)
-{
-
-    // see: http://doubleroot.in/lessons/straight-line/position-of-a-point-relative-to-a-line/#.Wt5H7ZPwalM
-
-
-    double m, b;
-    // need to solve equation y = mx + b for endPoint1 
-    // and endPoint2.
-
-    if (endPoint1[0] == endPoint2[0])
-    {
-        if ((endPoint1[0] < referencePoint[0]) && (endPoint1[0] < newPoint[0]))
-            return true;
-        if ((endPoint1[0] > referencePoint[0]) && (endPoint1[0] > newPoint[0]))
-            return true;
-        
-        return false;
-    }
-    m = (endPoint2[1] - endPoint1[1])/(endPoint2[0] - endPoint1[0]);
-    // y = mx+b
-    // a'x+b'y+c' = 0
-    // mx-y+b = 0;
-    // a' = m, b' = -1, c' = b
-    b = endPoint2[1]-m*endPoint2[0];
-    double a_formula = m;
-    double b_formula = -1;
-    double c_formula = b;
-
-    double val1 = referencePoint[0]*a_formula + referencePoint[1]*b_formula + c_formula;
-    double val2 = newPoint[0]*a_formula + newPoint[1]*b_formula + c_formula;
-
-    double product = val1*val2;
-    return (product < 0 ? false : true);
-}
-
 double
 sign(double *p1, double *p2, double *p3)
 {
