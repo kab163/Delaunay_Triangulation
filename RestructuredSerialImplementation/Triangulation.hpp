@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include <cmath>
 
 using std::vector;
 using std::cerr;
@@ -11,12 +12,14 @@ using std::endl;
 #ifndef TRIANGULATION_H
 #define TRIANGULATION_H
 
+#define EPSILON 0.00001
+
 //MARK: Definition
 class Triangulation {
     public:
         //MARK: Properties
         std::vector<Triangle>   triangles;
-        int                     num_points;
+        int                     num_pts;
         double                  bounding_box[4];
         double                  bounding_tri[6];
         double *                pts;
@@ -25,7 +28,7 @@ class Triangulation {
         void                    WriteOutTriangleVTK(char *filename);
         void                    WriteOutTriangleTGL(char *filename);
         void                    ReadFromTGL(char *filename); 
-        void                    InitializeFresh(int pt_count, double *pts);
+        void                    Initialize(int num_pts, double *pts);
         void                    AddPoint(double, double);
         void                    DelBoundingTri();
         void                    FindBoundingBox();
@@ -76,8 +79,34 @@ Triangulation::WriteOutTriangleVTK(char *filename) {
 }
 
 void 
-Triangulation::InitializeFresh(int pt_count, double *pts) {
+Triangulation::Initialize(int num_pts, double *pts) {
+    this -> pts = pts;
+    this -> num_pts = num_pts;
      
+}
+
+void
+Triangulation::DelBoundingTri() {
+    int ncells = triangles.size();
+    int edge;
+    int j;
+
+    for (j = ncells - 1; j >= 0; j--) {
+        if ((fabs(triangles[j].p1[0] - bounding_tri[2]) < EPSILON) ||
+            (fabs(triangles[j].p2[0] - bounding_tri[2]) < EPSILON) ||
+            (fabs(triangles[j].p3[0] - bounding_tri[2]) < EPSILON) ||
+            (fabs(triangles[j].p1[0] - bounding_tri[4]) < EPSILON) ||
+            (fabs(triangles[j].p2[0] - bounding_tri[4]) < EPSILON) ||
+            (fabs(triangles[j].p3[0] - bounding_tri[4]) < EPSILON) ||
+            (fabs(triangles[j].p1[1] - bounding_tri[1]) < EPSILON) ||
+            (fabs(triangles[j].p2[1] - bounding_tri[1]) < EPSILON) ||
+            (fabs(triangles[j].p3[1] - bounding_tri[1]) < EPSILON)) {
+
+            if (triangles[j].triangle_across_e1) {
+            
+            }
+        }
+    }
 }
         
 void
@@ -89,7 +118,7 @@ Triangulation::FindBoundingBox() {
     double y_min = 0.0;
     double y_max = 0.0;
 
-    for (i = 0; i < num_points; i++) {
+    for (i = 0; i < num_pts; i++) {
         if (pts[2 * i] < x_min)
             x_min = pts[2 * i];
         if (pts[2 * i] > x_max)
