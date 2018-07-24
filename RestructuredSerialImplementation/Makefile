@@ -1,5 +1,5 @@
-DTcode: main.C Triangle.hpp Triangulation.hpp visit_writer.c
-	g++ -std=c++11 -o DTcode main.C
+DTcode: main.cpp Triangle.hpp Triangulation.hpp visit_writer.c
+	g++ -std=c++11 -o DTcode main.cpp -O3
 
 run:
 	./DTcode
