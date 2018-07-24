@@ -165,12 +165,51 @@ Triangulation::DelBoundingTri() {
             (fabs(triangles[j].p2[1] - bounding_tri[1]) < EPSILON) ||
             (fabs(triangles[j].p3[1] - bounding_tri[1]) < EPSILON)) {
 
-            if (triangles[j].triangle_across_e1 != NULL)
-                *(triangles[j].self_across_e1) = NULL;
-            if (triangles[j].triangle_across_e2 != NULL)
-                *(triangles[j].self_across_e2) = NULL;
-            if (triangles[j].triangle_across_e3 != NULL)
-                *(triangles[j].self_across_e3) = NULL;
+            if (triangles[j].triangle_across_e1 != NULL) {
+                edge = triangles[j].what_edge_e1;
+                if (edge == 1) {
+                    triangles[j].triangle_across_e1 -> triangle_across_e1 = NULL;
+                    triangles[j].triangle_across_e1 -> what_edge_e1 = 0;
+                }
+                else if (edge == 2) {
+                    triangles[j].triangle_across_e1 -> triangle_across_e2 = NULL;
+                    triangles[j].triangle_across_e1 -> what_edge_e2 = 0;
+                }
+                else if (edge == 3) {
+                    triangles[j].triangle_across_e1 -> triangle_across_e3 = NULL;
+                    triangles[j].triangle_across_e1 ->what_edge_e3 = 0;
+                }
+            }
+            if (triangles[j].triangle_across_e2 != NULL) {
+                edge = triangles[j].what_edge_e2;
+                if (edge == 1) {
+                    triangles[j].triangle_across_e2 -> triangle_across_e1 = NULL;
+                    triangles[j].triangle_across_e2 -> what_edge_e1 = 0;
+                }
+                else if (edge == 2) {
+                    triangles[j].triangle_across_e2 -> triangle_across_e2 = NULL;
+                    triangles[j].triangle_across_e2 -> what_edge_e2 = 0;
+                }
+                else if (edge == 3) {
+                    triangles[j].triangle_across_e2 -> triangle_across_e3 = NULL;
+                    triangles[j].triangle_across_e2 -> what_edge_e3 = 0;
+                }
+            }
+            if (triangles[j].triangle_across_e3 != NULL) {
+                edge = triangles[j].what_edge_e3;
+                if (edge == 1) {
+                    triangles[j].triangle_across_e3 -> triangle_across_e1 = NULL;
+                    triangles[j].triangle_across_e3 -> what_edge_e1 = 0;
+                }
+                else if (edge == 2) {
+                    triangles[j].triangle_across_e3 -> triangle_across_e2 = NULL;
+                    triangles[j].triangle_across_e3 -> what_edge_e2 = 0;
+                }
+                else if (edge == 3) {
+                    triangles[j].triangle_across_e3 -> triangle_across_e3 = NULL;
+                    triangles[j].triangle_across_e3 -> what_edge_e3 = 0;
+                }
+            }
 
             for (int v = 0; v < triangles.size(); v++) {
                 if (triangles[v].triangle_across_e1 > &(triangles[j]))

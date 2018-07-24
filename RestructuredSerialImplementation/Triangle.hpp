@@ -20,9 +20,9 @@ class Triangle {
         Triangle*       triangle_across_e2;
         Triangle*       triangle_across_e3;
 
-        Triangle**      self_across_e1;
-        Triangle**      self_across_e2;
-        Triangle**      self_across_e3;
+        //Triangle**      self_across_e1;
+        //Triangle**      self_across_e2;
+        //Triangle**      self_across_e3;
 
         //MARK: Methods
                         Triangle();
@@ -38,9 +38,9 @@ Triangle::Triangle() {
     triangle_across_e2 = NULL;
     triangle_across_e3 = NULL;
 
-    self_across_e1 = NULL;
-    self_across_e2 = NULL;
-    self_across_e3 = NULL;
+    //self_across_e1 = NULL;
+    //self_across_e2 = NULL;
+    //self_across_e3 = NULL;
 
     what_edge_e1 = 0;
     what_edge_e2 = 0;
