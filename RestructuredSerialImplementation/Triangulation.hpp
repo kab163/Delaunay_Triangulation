@@ -82,7 +82,70 @@ void
 Triangulation::Initialize(int num_pts, double *pts) {
     this -> pts = pts;
     this -> num_pts = num_pts;
-     
+
+    triangles.reserve(4 * num_pts + 1);
+}
+
+void
+Triangulation::AddPoint(double x, double y) {
+    int i;
+    int num_triangles = triangles.size();
+
+    for (i = 0; i < num_triangles; i++) {
+        if (triangles[i].ContainsPoint(x, y)) {
+            if ((fabs(x - triangles[i].p1[0]) < EPSILON && fabs(y - triangles[i].p1[1]) < EPSILON) ||
+                (fabs(x - triangles[i].p2[0]) < EPSILON && fabs(y - triangles[i].p2[1]) < EPSILON) ||
+                (fabs(x - triangles[i].p3[0]) < EPSILON && fabs(y - triangles[i].p3[1]) < EPSILON)) {
+                cerr << "REDUNDANT POINTS - NOT ADDING" << endl;
+                return;
+            }
+            //else if, collinear
+            else {
+                Triangle original_triangle = triangles[i];
+                Triangle *TA = original_triangle.triangle_across_e1;
+                Triangle *TB = original_triangle.triangle_across_e2;
+                Triangle *TC = original_triangle.triangle_across_e3;
+
+                triangles[i].p3[0] = x;
+                triangles[i].p3[1] = y;
+                Triangle *T1 = &(triangles[i]);
+
+                Triangle new_triangle1;
+                new_triangle1.p1[0] = x;
+                new_triangle1.p1[1] = y;
+                new_triangle1.p2[0] = original_triangle.p2[0];
+                new_triangle1.p2[1] = original_triangle.p2[1];
+                new_triangle1.p3[0] = original_triangle.p3[0];
+                new_triangle1.p3[1] = original_triangle.p3[1];
+                triangles.emplace_back(new_triangle1);
+                Triangle *T3 = &(triangles[num_triangles]);
+
+                Triangle new_triangle2;
+                new_triangle2.p1[0] = original_triangle.p1[0];
+                new_triangle2.p1[1] = original_triangle.p1[1];
+                new_triangle2.p2[0] = x;
+                new_triangle2.p2[1] = y;
+                new_triangle2.p3[0] = original_triangle.p3[0];
+                new_triangle2.p3[1] = original_triangle.p3[1];
+                triangles.emplace_back(new_triangle2);
+                Triangle *T2 = &(triangles[num_triangles + 1]);
+
+                T1 -> triangle_across_e1 = TA;
+                T1 -> triangle_across_e2 = T3;
+                T1 -> triangle_across_e3 = T2;
+                T2 -> triangle_across_e1 = T1;
+                T2 -> triangle_across_e2 = T3;
+                T2 -> triangle_across_e3 = TB;
+                T3 -> triangle_across_e1 = T1;
+                T3 -> triangle_across_e2 = TC;
+                T3 -> triangle_across_e3 = T2;
+
+                if (TA != NULL) {
+                   
+                }
+            }
+        }
+    }
 }
 
 void
@@ -102,9 +165,23 @@ Triangulation::DelBoundingTri() {
             (fabs(triangles[j].p2[1] - bounding_tri[1]) < EPSILON) ||
             (fabs(triangles[j].p3[1] - bounding_tri[1]) < EPSILON)) {
 
-            if (triangles[j].triangle_across_e1) {
-            
+            if (triangles[j].triangle_across_e1 != NULL)
+                *(triangles[j].self_across_e1) = NULL;
+            if (triangles[j].triangle_across_e2 != NULL)
+                *(triangles[j].self_across_e2) = NULL;
+            if (triangles[j].triangle_across_e3 != NULL)
+                *(triangles[j].self_across_e3) = NULL;
+
+            for (int v = 0; v < triangles.size(); v++) {
+                if (triangles[v].triangle_across_e1 > &(triangles[j]))
+                    --triangles[v].triangle_across_e1;
+                if (triangles[v].triangle_across_e2 > &(triangles[j]))
+                    --triangles[v].triangle_across_e2;
+                if (triangles[v].triangle_across_e3 > &(triangles[j]))
+                    --triangles[v].triangle_across_e3;
             }
+
+            triangles.erase(triangles.begin() + j);
         }
     }
 }

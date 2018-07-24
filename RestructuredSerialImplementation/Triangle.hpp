@@ -8,27 +8,43 @@
 class Triangle {
     public:
         //MARK: Properties
-        double  p1[2];
-        double  p2[2];
-        double  p3[2];
+        double          p1[2];
+        double          p2[2];
+        double          p3[2];
 
-        int     triangle_across_e1;
-        int     triangle_across_e2;
-        int     triangle_across_e3;
+        int             what_edge_e1;
+        int             what_edge_e2;
+        int             what_edge_e3;
+
+        Triangle*       triangle_across_e1;
+        Triangle*       triangle_across_e2;
+        Triangle*       triangle_across_e3;
+
+        Triangle**      self_across_e1;
+        Triangle**      self_across_e2;
+        Triangle**      self_across_e3;
 
         //MARK: Methods
-                Triangle();
-                Triangle(const Triangle&);
-        double  Sign(double *, double *, double *);
-        bool    ContainsPoint(double, double);
+                        Triangle();
+                        Triangle(const Triangle&);
+        double          Sign(double *, double *, double *);
+        bool            ContainsPoint(double, double);
 
 };
 
 //MARK: Definitions
 Triangle::Triangle() {
-    triangle_across_e1 = -1;
-    triangle_across_e2 = -1;
-    triangle_across_e3 = -1;
+    triangle_across_e1 = NULL;
+    triangle_across_e2 = NULL;
+    triangle_across_e3 = NULL;
+
+    self_across_e1 = NULL;
+    self_across_e2 = NULL;
+    self_across_e3 = NULL;
+
+    what_edge_e1 = 0;
+    what_edge_e2 = 0;
+    what_edge_e3 = 0;
 }
 
 Triangle::Triangle(const Triangle &c) {

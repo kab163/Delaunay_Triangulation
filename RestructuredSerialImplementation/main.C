@@ -5,7 +5,7 @@
 
 int main(int argc, char **argv) {
     Triangle *t = new Triangle();
-    printf("%d\n", t -> triangle_across_e1);
-    printf("%d\n", t -> triangle_across_e2);
-    printf("%d\n", t -> triangle_across_e3);
+    printf("%p\n", t -> triangle_across_e1);
+    printf("%p\n", t -> triangle_across_e2);
+    printf("%p\n", t -> triangle_across_e3);
 }
