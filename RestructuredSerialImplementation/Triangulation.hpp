@@ -30,6 +30,7 @@ class Triangulation {
         void                    ReadFromTGL(char *filename); 
         void                    Initialize(int num_pts, double *pts);
         void                    AddPoint(double, double);
+        void                    AddPoints();
         void                    DelBoundingTri();
         void                    FindBoundingBox();
         void                    FindBoundingTri();
@@ -88,7 +89,7 @@ Triangulation::Initialize(int num_pts, double *pts) {
 
 void
 Triangulation::AddPoint(double x, double y) {
-    int i;
+    int i, edge;
     int num_triangles = triangles.size();
 
     for (i = 0; i < num_triangles; i++) {
@@ -141,10 +142,44 @@ Triangulation::AddPoint(double x, double y) {
                 T3 -> triangle_across_e3 = T2;
 
                 if (TA != NULL) {
-                   
+                    edge = original_triangle.what_edge_e1;
+                    if (edge == 1)
+                        TA -> triangle_across_e1 = T1;
+                    else if (edge == 2)
+                        TA -> triangle_across_e2 = T1;
+                    else if (edge == 3)
+                        TA -> triangle_across_e3 = T1;
+                }
+                if (TB != NULL) {
+                    edge = original_triangle.what_edge_e3;
+                    if (edge == 1)
+                        TB -> triangle_across_e1 = T2;
+                    else if (edge == 2)
+                        TB -> triangle_across_e2 = T2;
+                    else if (edge == 3)
+                        TB -> triangle_across_e3 = T2;
+                }
+                if (TC != NULL) {
+                    edge = original_triangle.what_edge_e2;
+                    if (edge == 1)
+                        TC -> triangle_across_e1 = T3;
+                    else if (edge == 2)
+                        TC -> triangle_across_e2 = T3;
+                    else if (edge == 3)
+                        TC -> triangle_across_e3 = T3;
                 }
             }
+            return;
         }
+    }
+}
+
+void
+Triangulation::AddPoints() {
+    int i;
+    cerr << "Entered ADD POINTS" << endl;
+    for (i = 0; i < num_pts; i++) {
+        AddPoint(pts[2 * i], pts[2 * i + 1]);
     }
 }
 
@@ -260,7 +295,7 @@ Triangulation::FindBoundingTri() {
    bounding_tri[2] = 2 * bounding_box[0] - bounding_tri[0];
    bounding_tri[3] = bounding_box[2];
    bounding_tri[4] = 2 * bounding_box[1] - bounding_tri[0];
-   bounding_tri[5] = bounding_box[3];
+   bounding_tri[5] = bounding_box[2];
 }
 
 void

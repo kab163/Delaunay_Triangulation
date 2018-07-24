@@ -54,6 +54,9 @@ Triangle::Triangle(const Triangle &c) {
     triangle_across_e1 = c.triangle_across_e1;
     triangle_across_e2 = c.triangle_across_e2;
     triangle_across_e3 = c.triangle_across_e3;
+    what_edge_e1 = c.what_edge_e1;
+    what_edge_e2 = c.what_edge_e2;
+    what_edge_e3 = c.what_edge_e3;
 }
 
 double 
