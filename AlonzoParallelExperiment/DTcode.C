@@ -1371,9 +1371,9 @@ class ParallelDelaunayTriangulation
         int i = NUM_POINTS / 2, j;
         double *bb, *bt;
         
-        bb = DT1.FindBoundingBox(pts, i);
-        bt = DT1.Initialize(bb, i);
-        for (j = 0; j < i; j++) {
+        bb = DT1.FindBoundingBox(pts, i + 1000);
+        bt = DT1.Initialize(bb, i + 1000);
+        for (j = 0; j < i + 1000; j++) {
              DT1.AddPoint(pts[2 * j], pts[2 * j + 1]);
         }
         DT1.Verify();
@@ -1381,9 +1381,9 @@ class ParallelDelaunayTriangulation
         DT1.VerifyMeetDC();
         
         
-        bb = DT2.FindBoundingBox(pts, NUM_POINTS - i);
-        bt = DT2.Initialize(bb, NUM_POINTS - i);
-        for (; j < NUM_POINTS; j++) {
+        bb = DT2.FindBoundingBox(pts + i - 1000, NUM_POINTS - i + 1000);
+        bt = DT2.Initialize(bb, NUM_POINTS - i + 1000);
+        for (j = j - 1000; j < NUM_POINTS; j++) {
              DT2.AddPoint(pts[2 * j], pts[2 * j + 1]);
         }
         DT2.Verify();
