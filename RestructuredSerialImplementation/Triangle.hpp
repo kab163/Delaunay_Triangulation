@@ -4,16 +4,17 @@
 #ifndef TRIANGLE_H
 #define TRIANGLE_H
 
+//MARK: Declarations
 class Triangle {
     public:
         //MARK: Properties
-        double p1[2];
-        double p2[2];
-        double p3[2];
+        double  p1[2];
+        double  p2[2];
+        double  p3[2];
 
-        int triangle_across_e1;
-        int triangle_across_e2;
-        int triangle_across_e3;
+        int     triangle_across_e1;
+        int     triangle_across_e2;
+        int     triangle_across_e3;
 
         //MARK: Methods
                 Triangle();
@@ -23,7 +24,7 @@ class Triangle {
 
 };
 
-
+//MARK: Definitions
 Triangle::Triangle() {
     triangle_across_e1 = -1;
     triangle_across_e2 = -1;
@@ -39,11 +40,13 @@ Triangle::Triangle(const Triangle &c) {
     triangle_across_e3 = c.triangle_across_e3;
 }
 
-double Triangle::Sign(double *pA, double *pB, double *pC) {
+double 
+Triangle::Sign(double *pA, double *pB, double *pC) {
     return (pA[0] - pC[0]) * (pB[1] - pC[1]) - (pB[0] - pC[0]) * (pA[1] - pC[1]);
 }
 
-bool Triangle::ContainsPoint(double x, double y) {
+bool 
+Triangle::ContainsPoint(double x, double y) {
     double p4[2];
     bool b1, b2, b3;
 
