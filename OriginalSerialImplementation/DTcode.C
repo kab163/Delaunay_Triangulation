@@ -12,7 +12,7 @@ using std::vector;
 using std::cerr;
 using std::endl;
 
-#define NUM_POINTS 20000
+#define NUM_POINTS 50000
 
 
 // OUR CONVENTION
@@ -34,7 +34,7 @@ double *
 PointsGenerator(int numPoints, int dim = 2)
 {
     double *array = new double[numPoints*dim];
-    srand(time(NULL));   //USE THIS LINE TO SEED RAND
+    //srand(time(NULL));   //USE THIS LINE TO SEED RAND
     for (int i = 0 ; i < numPoints ; i++)
     {
         for (int j = 0 ; j < dim ; j++)
@@ -567,7 +567,8 @@ void
 DelaunayTriangulation::AddPoint(double x1, double y1)
 {
     double EPSILON = 0.000000001f;
-    for (int i = 0 ; i < triangles.size() ; i++) {
+    int num_triangles = triangles.size();
+    for (int i = 0 ; i < num_triangles; i++) {
         if (triangles[i].ContainsPoint(x1, y1)) {
             if ((fabs(x1 - triangles[i].p1[0]) < EPSILON && fabs(y1 - triangles[i].p1[1]) < EPSILON) ||
                 (fabs(x1 - triangles[i].p2[0]) < EPSILON && fabs(y1 - triangles[i].p2[1]) < EPSILON) ||
